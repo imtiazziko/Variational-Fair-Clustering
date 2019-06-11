@@ -10,8 +10,6 @@ from src.dataset_load import read_dataset,dataset_names
 from src.util  import get_fair_accuracy, get_fair_accuracy_proportional, normalizefea
 from data_visualization import plot_clusters_vs_lambda, plot_fairness_vs_clusterE, plot_convergence
 import random
-import pdb
-
 
 
 def  main(args):
@@ -35,8 +33,7 @@ def  main(args):
     plot_option_fairness_vs_clusterE = args.plot_option_fairness_vs_clusterE
     plot_option_convergence = args.plot_option_convergence
     
-    pdb.set_trace()
-    # ###  Data load
+        # ###  Data load
     X_org, demograph, K = read_dataset(dataset)
     
     V_list =  [np.array(demograph == j) for j in np.unique(demograph)]

@@ -15,7 +15,6 @@ from matplotlib import pyplot as plt
 #from glob import glob
 #import re
 from sklearn.preprocessing import scale
-import pdb
 #import os.path as osp
 
 
@@ -107,7 +106,6 @@ def read_dataset(name):
         n= 4000
         K = 2
         data_path = './data/bank-additional-full.csv'
-        pdb.set_trace()
 
         if (not os.path.exists(data_path)): 
 
