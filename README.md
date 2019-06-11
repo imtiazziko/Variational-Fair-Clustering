@@ -14,6 +14,6 @@ For different dataset and parameters change the above script according to the re
 
 ## Example
 
-For _Synthetic_ dataset with two equal demographic groups (50/50) and _Synthetic-Unequal_ dataset with uneven proportions (75/25), we can impose the required proportions according to the dataset while clustering by increasing the weight of the $\lambda$ parameter for the fairness. With different lambdas we can get the required given proportions in each cluster.
+For _Synthetic_ dataset with two equal demographic groups (50/50) and _Synthetic-unequal_ dataset with uneven proportions (75/25), we can impose the required proportions according to the dataset while clustering by increasing the weight of the $\lambda$ parameter for the fairness. With different lambdas we can get the required given proportions in each cluster.
 
 <div align="center"><img src="outputs/lambda_clusters.png" alt=""/></div>
