@@ -9,7 +9,7 @@ To evaluate the code simply run the following which put the outputs in the [outp
 ```
 sh evaluate_Fair_clustering.sh
 ```
-For different dataset and parameters change the above script according to the argparse commands needed.
+For different dataset and parameters change the above script according to the required arguments described in [test_fair_clustering.py](./test_fair_clustering.py).
 
 
 
