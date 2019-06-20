@@ -1,5 +1,5 @@
 # Clustering-with-fairness-constraints
-This is the code for the paper **[Clustering With Fairness Constraints: A Flexible and Scalable approach](https://arxiv.org/abs/1906.08207)**. This clustering method helps you to find clusters with specefied proportions of different demographic groups of pertaining to a sensitive attribute of the dataset (e.g. race, gender or sex etc.) for different well-known clustering method such as K-means or Spectral clustering (Normalized cut) etc. in a flexible and scalable way.
+This is the code for the paper **[Clustering With Fairness Constraints: A Flexible and Scalable approach](https://arxiv.org/abs/1906.08207)**. This clustering method helps you to find clusters with specefied proportions of different demographic groups pertaining to a sensitive attribute of the dataset (e.g. race, gender or sex etc.), for different well-known clustering method such as K-means or Spectral clustering (Normalized cut) etc. in a flexible and scalable way.
 
 ## Prerequisites
 
@@ -14,6 +14,6 @@ For different dataset and parameters change the above script according to the re
 
 ## Example
 
-For _Synthetic_ dataset with two equal demographic groups (50/50) and _Synthetic-unequal_ dataset with uneven proportions (75/25), we can impose the required proportions according to the dataset while clustering by increasing the weight of the $\lambda$ parameter for the fairness. With different lambdas we can get the required given proportions in each cluster.
+For _Synthetic_ dataset with two equal demographic groups (50/50) and _Synthetic-unequal_ dataset with uneven proportions (75/25), we can impose the required proportions according to the dataset while clustering by increasing the weight of the $\lambda$ parameter for the fairness. With a suitable lambda we can get the required given proportions in each cluster.
 
 <div align="center"><img src="outputs/lambda_clusters.png" alt=""/></div>
