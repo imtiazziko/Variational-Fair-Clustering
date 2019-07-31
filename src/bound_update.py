@@ -3,6 +3,7 @@
 import numpy as np
 import timeit
 from src.progressBar import printProgressBar
+import pdb
 #import math
 
 
@@ -70,12 +71,12 @@ def bound_update(a_p, X, l, u_V, V_list, bound_lambda, bound_iteration =200, deb
     S = normalize_2(S)
     
     # Estimate of L
-    V_list_float = np.array(V_list).astype('float')
-    SV_term = np.dot(V_list_float,S).min(axis=1)
-    
+    # V_list_float = np.array(V_list).astype('float')
+    # SV_term = np.dot(V_list_float,S).min(axis=1)
+    # pdb.set_trace()
     # Max eigen value estimate
-    L = max(max(u_V/(SV_term**2))*N,1.0)
-    
+    # L = max((u_V/(SV_term**2)).max()*N,1.0) #
+    L = 1
     for i in range(bound_iteration):
         
         printProgressBar(i + 1, bound_iteration,length=12)

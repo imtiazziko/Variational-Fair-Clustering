@@ -196,8 +196,7 @@ def fair_clustering(X, K, u_V, V_list, lmbda, fairness = False, method = 'kmeans
         if i == 0:
             
             sqdist = ecdist(X,C,squared=True)
-            S = normalize_2(np.exp((-sqdist)))
-            a_p = S*sqdist
+            a_p = sqdist.copy() #
 #                pass
             if method == 'ncut':
                 S = get_S_discrete(l,N,K)
@@ -219,7 +218,7 @@ def fair_clustering(X, K, u_V, V_list, lmbda, fairness = False, method = 'kmeans
                 C[[k],] = kmeans_update(X,tmp)
                 
             sqdist = ecdist(X,C,squared=True)
-            a_p = S*sqdist
+            a_p = sqdist.copy()
             
         elif method == 'ncut':
             print ('Inside ncut update')
@@ -237,7 +236,7 @@ def fair_clustering(X, K, u_V, V_list, lmbda, fairness = False, method = 'kmeans
             
             # Check for empty cluster
             if (len(np.unique(l_check))!=K):
-                l,C,S,mode_index,trivial_status = restore_nonempty_cluster(X,K,oldl,oldC,oldS,ts)
+                l,C,S,trivial_status = restore_nonempty_cluster(X,K,oldl,oldC,oldS,ts)
                 ts = ts+1
                 if trivial_status:
                     break
@@ -276,7 +275,7 @@ def fair_clustering(X, K, u_V, V_list, lmbda, fairness = False, method = 'kmeans
         
         
         if (len(np.unique(l))!=K) or math.isnan(fairness_error):
-            l,C,S,mode_index,trivial_status = restore_nonempty_cluster(X,K,oldl,oldC,oldS,ts)
+            l,C,S,trivial_status = restore_nonempty_cluster(X,K,oldl,oldC,oldS,ts)
             ts = ts+1
             if trivial_status:
                 break
