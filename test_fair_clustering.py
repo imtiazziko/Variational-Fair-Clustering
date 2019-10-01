@@ -85,7 +85,7 @@ def  main(args):
     best_min_balance = -1
     
     if args.lmbda is None:      
-        lmbdas = np.arange(5,50,2).tolist()
+        lmbdas = np.arange(45,50,2).tolist()
     else:
         lmbdas = [args.lmbda]
         
