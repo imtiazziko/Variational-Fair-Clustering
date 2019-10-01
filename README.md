@@ -3,7 +3,7 @@ This is the code for the paper **[Clustering With Fairness Constraints: A Flexib
 
 ## Prerequisites
 
-The code is based on python 3.6 and need the Pandas and Matplotlib libraries. We have provided the saved model for our reported results in the paper in the [data](./data) directory.
+The code is based on python 3.6 and need the Pandas and Matplotlib libraries.
 
 ## Usage
 To evaluate the code simply run the following which put the outputs in the [outputs](./outputs) folder.
