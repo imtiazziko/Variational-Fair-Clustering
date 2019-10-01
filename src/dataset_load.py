@@ -184,7 +184,6 @@ if __name__=='__main__':
 
 
     dataset = 'CensusII'
-
     X_org = np.load('../data/Census2_raw.npz')['data']
 
     demograph = np.load('../data/Census2_demograph.npz')['demograph']

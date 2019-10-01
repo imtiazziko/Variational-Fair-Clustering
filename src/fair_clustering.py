@@ -236,7 +236,6 @@ def restore_nonempty_cluster (X,K,oldl,oldC,oldS,ts):
         
         return l,C,S,trivial_status
 
-
 def fair_clustering(X, K, u_V, V_list, lmbda, fairness = False, method = 'kmeans', C_init = "kmeans_plus", A = None):
     
     """ 

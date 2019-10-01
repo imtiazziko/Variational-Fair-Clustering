@@ -46,6 +46,7 @@ dataset = 'Adult'
 data_path = osp.join(data_dir,'icml_normalized_'+dataset+'.mat')
 
 data = sio.loadmat(data_path)
+
 #
 l = data ['l'] - 1
 l = l.squeeze()

@@ -70,7 +70,8 @@ def plot_fairness_vs_clusterE(cluster_option, savefile, filename, lmbdas, fairne
         fig.savefig(filename, format='png', dpi = 800, bbox_inches='tight')
         plt.show()
         plt.close('all')
-        
+
+
 def plot_convergence(cluster_option, filename, E_fair):
     
     # Plot original fair clustering energy

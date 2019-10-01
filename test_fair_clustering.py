@@ -157,6 +157,7 @@ def  main(args):
         plot_fairness_vs_clusterE(cluster_option, savefile, filename, lmbdas, fairness_error_set, E_cluster_set)
 
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Clustering with Fairness Constraints")
     # dataset
