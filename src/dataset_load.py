@@ -11,15 +11,17 @@ from sklearn.datasets import make_blobs
 import sys
 import requests, zipfile, io
 import pandas
+import os.path as osp
 from matplotlib import pyplot as plt
 #from glob import glob
 #import re
 from sklearn.preprocessing import scale
+from src.util  import  saveCompressed
 #import os.path as osp
 
 
 
-__datasets = ['Adult', 'Bank', 'Synthetic', 'Synthetic-unequal']
+__datasets = ['Adult', 'Bank', 'Synthetic', 'Synthetic-unequal', 'CensusII']
 
 def dataset_names():
 
@@ -28,7 +30,9 @@ def dataset_names():
 
 def read_dataset(name):
 
-
+    data = []
+    sex_num = []
+    K = []
     if name not in __datasets:
         raise KeyError("Dataset not implemented:",name)
         
@@ -61,15 +65,15 @@ def read_dataset(name):
         
     elif name == 'Adult':
         
-        data_path = './data/adult.data'
+        data_path = '../data/adult.data'
         race_is_sensitive_attribute = 0
         
         if race_is_sensitive_attribute==1:
             m = 5
         else:
             m = 2
-        n = 20000
-        K = 20
+        # n = 25000
+        K = 30
         if (not os.path.exists(data_path)): 
             print('Adult data set does not exist in current folder --- Have to download it')
             r = requests.get('https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data', allow_redirects=True)
@@ -81,7 +85,8 @@ def read_dataset(name):
             open(data_path, 'wb').write(r.content)
         
         df = pandas.read_csv(data_path, sep=',',header=None)
-        df = df[:n]
+        # df = df[:n]
+        n = df.shape[0]
         
         sens_attr = 9
         sex = df[sens_attr]
@@ -99,13 +104,13 @@ def read_dataset(name):
         data = data[:,[0,1,2,5]]
         
         #Scale data
-        data = scale(data, axis = 0)
+        # data = scale(data, axis = 0)
 
     elif name == 'Bank':
         
-        n= 4000
-        K = 2
-        data_path = './data/bank-additional-full.csv'
+        # n= 6000
+        K = 30
+        data_path = '../data/bank-additional-full.csv'
 
         if (not os.path.exists(data_path)): 
 
@@ -129,16 +134,19 @@ def read_dataset(name):
         sex = df['marital'].astype(str).values
         sens_attributes = list(set(sex))
         sens_attributes.remove('unknown')
-        df1 = df.loc[df['marital'] == sens_attributes[0]][:n]
-        df2 = df.loc[df['marital'] == sens_attributes[1]][:n]
-        df3 = df.loc[df['marital'] == sens_attributes[2]][:n]
+        # df1 = df.loc[df['marital'] == sens_attributes[0]][:n]
+        # df2 = df.loc[df['marital'] == sens_attributes[1]][:n]
+        # df3 = df.loc[df['marital'] == sens_attributes[2]][:n]
+        df1 = df.loc[df['marital'] == sens_attributes[0]]
+        df2 = df.loc[df['marital'] == sens_attributes[1]]
+        df3 = df.loc[df['marital'] == sens_attributes[2]]
         
         df = [df1, df2, df3]
         df = pandas.concat(df)
         
         sex = df['marital'].astype(str).values
         
-        df = df[['age','duration','euribor3m', 'nr.employed']].values 
+        df = df[['age','duration','euribor3m', 'nr.employed', 'cons.price.idx', 'campaign']].values
 
         sens_attributes = list(set(sex))
         sex_num = np.zeros(df.shape[0], dtype=int)
@@ -148,9 +156,24 @@ def read_dataset(name):
         data = np.array(df, dtype=float)
         
         #Scale data
-        data = scale(data, axis = 0)
+        # data = scale(data, axis = 0)
 #        
 #        data = data[,:]
+
+    elif name=='CensusII':
+        data_path = '../data/USCensus1990raw.data.txt'
+        df = pandas.read_csv(data_path, sep='\t', header = None)
+        # df = pandas.read_csv(data_path,sep=',').iloc[0:,1:]
+        sex_num = df.iloc[:,112].astype(int).values
+        selected_attributes = [12,35,36,47,53,54,55,58,60,63,64,65,73,80,81,93,94,95,96,101,109,116,118,122,124]
+        df = df.iloc[:,selected_attributes].values
+
+        # sens_attributes = list(set(sex_num))
+        # df = df.drop(columns='iSex')
+        data = np.array(df, dtype=float)
+        # data = scale(data, axis = 0)
+        K = 20
+
     else:
         pass
 
@@ -158,52 +181,19 @@ def read_dataset(name):
     
     
 if __name__=='__main__':
-    
-#    dataset = 'Synthetic'
-    dataset = 'Synthetic-unequal'
-    
-    data, sex_num, K = read_dataset(dataset)
-    filename = '{}.png'.format(dataset)
-    
-    COLORSX = np.array(['bv','kP'])
-    
-    plt.figure(1,figsize=(6.4,4.8))
-    plt.clf()
-    
-#     marker_edge_color = ['r',]
-    group = ['demographic 1 ({})', 'demographic 2 ({})']
-    for k in range(K):
-        idx = np.asarray(np.where(sex_num == k)).squeeze()
-        label_text = group[k].format(len(idx))
-        plt.plot(data[idx,0],data[idx,1],COLORSX[k],label = label_text);
-    plt.title(dataset)
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig(filename, format='png', dpi = 800, bbox_inches='tight')
-    plt.show()
-    plt.close('all')
-    
-    
-#    COLORSX = np.array(['bv','kP'])
-#    plt.figure(1,figsize=(6.4,4.8))
-#    plt.clf()
-#    
-##     marker_edge_color = ['r',]
-#    group = ['demographic 1 ({})', 'demographic 2 ({})']
-#    for k in range(K):
-#        idx = np.asarray(np.where(sex_num == k)).squeeze()
-#        label_text = group[k].format(len(idx))
-#        plt.plot(data[idx,0],data[idx,1],COLORSX[k],label = label_text);
-##	     plt.plot(C[k,0],C[k,1],COLORSX[5]);
-#    plt.title('Synthetic (equal)')
-#    plt.legend()
-#    plt.tight_layout()
-#    plt.savefig(filename, format='png', dpi = 800, bbox_inches='tight')
-#    plt.show()
-#    plt.close('all')
-    
-    
-    
+
+
+    dataset = 'CensusII'
+
+    X_org = np.load('../data/Census2_raw.npz')['data']
+
+    demograph = np.load('../data/Census2_demograph.npz')['demograph']
+
+    V_list =  [np.array(demograph == j) for j in np.unique(demograph)]
+    V_sum =  [x.sum() for x in V_list]
+    print('Balance of the dataset {}'.format(min(V_sum)/max(V_sum)))
+    u_V = [x/data.shape[0] for x in V_sum]
+
     
     
     

@@ -1,5 +1,3 @@
-from IPython import get_ipython
-def __reset__(): get_ipython().magic('reset -sf')
 import argparse
 import os
 import os.path as osp

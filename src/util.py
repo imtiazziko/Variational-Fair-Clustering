@@ -1,16 +1,82 @@
 import numpy as np
+import os
+import sys
+import errno
+import shutil
+import os.path as osp
 import scipy.io as sio
 from sklearn.neighbors import NearestNeighbors
 from scipy import sparse
+import scipy.sparse as sps
 import timeit
 from pyflann import FLANN
+import pdb
 
+import zipfile
+import io
 
-#import multiprocessing
-#SHARED_VARS = {}
-#SHARED_array = {}
+import multiprocessing
+SHARED_VARS = {}
+SHARED_array = {}
 
+class Logger(object):
+    """
+    Write console output to external text file.
 
+    Code imported from https://github.com/Cysu/open-reid/blob/master/reid/utils/logging.py.
+    """
+    def __init__(self, fpath=None):
+        self.console = sys.stdout
+        self.file = None
+        if fpath is not None:
+            mkdir_if_missing(os.path.dirname(fpath))
+            self.file = open(fpath, 'w')
+
+    def __del__(self):
+        self.close()
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, *args):
+        self.close()
+
+    def write(self, msg):
+        self.console.write(msg)
+        if self.file is not None:
+            self.file.write(msg)
+
+    def flush(self):
+        self.console.flush()
+        if self.file is not None:
+            self.file.flush()
+            os.fsync(self.file.fileno())
+
+    def close(self):
+        self.console.close()
+        if self.file is not None:
+            self.file.close()
+
+def mkdir_if_missing(directory):
+    if not osp.exists(directory):
+        try:
+            os.makedirs(directory)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+
+def saveCompressed(fh, **namedict):
+     with zipfile.ZipFile(fh,
+                          mode="w",
+                          compression=zipfile.ZIP_DEFLATED,
+                          allowZip64=True) as zf:
+         for k, v in namedict.items():
+             buf = io.BytesIO()
+             np.lib.npyio.format.write_array(buf,
+                                             np.asanyarray(v),
+                                             allow_pickle=False)
+             zf.writestr(k + '.npy',
+                         buf.getvalue())
 
 def normalizefea(X):
     """
@@ -21,7 +87,7 @@ def normalizefea(X):
     return X_out
 
 def get_V_jl(x,l,N,K):
-
+    x = x.squeeze()
     temp =  np.zeros((N,K))
     index_cluster = l[x]
     temp[(x,index_cluster)]=1
@@ -29,6 +95,7 @@ def get_V_jl(x,l,N,K):
     return temp
 
 def get_fair_accuracy(u_V,V_list,l,N,K):
+    # pdb.set_trace()
     V_j_list  = np.array([get_V_jl(x,l,N,K) for x in V_list])
     
     balance = np.zeros(K)
@@ -109,47 +176,47 @@ def create_affinity(X, knn, scale = None, alg = "annoy", savepath = None, W_path
 
 ### TODO: supporting functions to make parallel updates of clusters
     
-#def n2m(a):
-#    """
-#    Return a multiprocessing.Array COPY of a numpy.array, together
-#    with shape, typecode and matrix flag.
-#    """
-#    if not isinstance(a, np.ndarray): a = np.array(a)
-#    return multiprocessing.Array(a.dtype.char, a.flat, lock=False), tuple(a.shape), a.dtype.char, isinstance(a, np.matrix)
-#
-#def m2n(buf, shape, typecode, ismatrix=False):
-#    """
-#    Return a numpy.array VIEW of a multiprocessing.Array given a
-#    handle to the array, the shape, the data typecode, and a boolean
-#    flag indicating whether the result should be cast as a matrix.
-#    """
-#    a = np.frombuffer(buf, dtype=typecode).reshape(shape)
-#    if ismatrix: a = np.asmatrix(a)
-#    return a
-#
-#def mpassing(slices):
-#    
-#    i,k = slices
-#    Q_s,kernel_s_data,kernel_s_indices,kernel_s_indptr,kernel_s_shape = get_shared_arrays('Q_s','kernel_s_data','kernel_s_indices','kernel_s_indptr','kernel_s_shape')
-#    # kernel_s = sps.csc_matrix((SHARED_array['kernel_s_data'],SHARED_array['kernel_s_indices'],SHARED_array['kernel_s_indptr']), shape=SHARED_array['kernel_s_shape'], copy=False)
-#    kernel_s = sps.csc_matrix((kernel_s_data,kernel_s_indices,kernel_s_indptr), shape=kernel_s_shape, copy=False)
-#    Q_s[i,k] = kernel_s[i].dot(Q_s[:,k])
-##    return Q_s
-#
-#    
-#def new_shared_array(shape, typecode='d', ismatrix=False):
-#    """
-#    Allocate a new shared array and return all the details required
-#    to reinterpret it as a numpy array or matrix (same order of
-#    output arguments as n2m)
-#    """
-#    typecode = np.dtype(typecode).char
-#    return multiprocessing.Array(typecode, int(np.prod(shape)), lock=False), tuple(shape), typecode, ismatrix
-#
-#def get_shared_arrays(*names):
-#    return [m2n(*SHARED_VARS[name]) for name in names]
-#
-#def init(*pargs, **kwargs):
-#    SHARED_VARS.update(pargs, **kwargs)
+def n2m(a):
+   """
+   Return a multiprocessing.Array COPY of a numpy.array, together
+   with shape, typecode and matrix flag.
+   """
+   if not isinstance(a, np.ndarray): a = np.array(a)
+   return multiprocessing.Array(a.dtype.char, a.flat, lock=False), tuple(a.shape), a.dtype.char, isinstance(a, np.matrix)
+
+def m2n(buf, shape, typecode, ismatrix=False):
+   """
+   Return a numpy.array VIEW of a multiprocessing.Array given a
+   handle to the array, the shape, the data typecode, and a boolean
+   flag indicating whether the result should be cast as a matrix.
+   """
+   a = np.frombuffer(buf, dtype=typecode).reshape(shape)
+   if ismatrix: a = np.asmatrix(a)
+   return a
+
+def mpassing(slices):
+
+   i,k = slices
+   Q_s,kernel_s_data,kernel_s_indices,kernel_s_indptr,kernel_s_shape = get_shared_arrays('Q_s','kernel_s_data','kernel_s_indices','kernel_s_indptr','kernel_s_shape')
+   # kernel_s = sps.csc_matrix((SHARED_array['kernel_s_data'],SHARED_array['kernel_s_indices'],SHARED_array['kernel_s_indptr']), shape=SHARED_array['kernel_s_shape'], copy=False)
+   kernel_s = sps.csc_matrix((kernel_s_data,kernel_s_indices,kernel_s_indptr), shape=kernel_s_shape, copy=False)
+   Q_s[i,k] = kernel_s[i].dot(Q_s[:,k])
+#    return Q_s
+
+
+def new_shared_array(shape, typecode='d', ismatrix=False):
+   """
+   Allocate a new shared array and return all the details required
+   to reinterpret it as a numpy array or matrix (same order of
+   output arguments as n2m)
+   """
+   typecode = np.dtype(typecode).char
+   return multiprocessing.Array(typecode, int(np.prod(shape)), lock=False), tuple(shape), typecode, ismatrix
+
+def get_shared_arrays(*names):
+   return [m2n(*SHARED_VARS[name]) for name in names]
+
+def init(*pargs, **kwargs):
+   SHARED_VARS.update(pargs, **kwargs)
 
 ####
