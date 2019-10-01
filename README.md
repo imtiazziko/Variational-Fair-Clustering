@@ -1,5 +1,5 @@
 # Clustering-with-fairness-constraints
-This is the code for the paper **[Clustering With Fairness Constraints: A Flexible and Scalable approach](https://arxiv.org/abs/1906.08207)**. This clustering method helps you to find clusters with specified proportions of different demographic groups pertaining to a sensitive attribute of the dataset (e.g. race, gender or sex etc.), for any well-known clustering method such as K-means, K-median or Spectral clustering (Normalized cut) etc. in a flexible and scalable way.
+This is the code for the paper **[Clustering With Fairness Constraints: A Flexible and Scalable approach](https://arxiv.org/abs/1906.08207)**. This clustering method helps you to find clusters with specified proportions of different demographic groups pertaining to a sensitive attribute of the dataset (e.g. race, gender etc.), for any well-known clustering method such as K-means, K-median or Spectral clustering (Normalized cut) etc. in a flexible and scalable way.
 
 ## Prerequisites
 
