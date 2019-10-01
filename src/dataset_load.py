@@ -13,11 +13,8 @@ import requests, zipfile, io
 import pandas
 import os.path as osp
 from matplotlib import pyplot as plt
-#from glob import glob
-#import re
 from sklearn.preprocessing import scale
 from src.util  import  saveCompressed
-#import os.path as osp
 
 
 
