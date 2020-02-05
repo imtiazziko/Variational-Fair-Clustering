@@ -104,7 +104,7 @@ def bound_update(a_p,u_V, V_list, bound_lambda, bound_iteration =200, debug=Fals
         # print('Bound Energy {: .4f} at iteration {} '.format(E,i))
         report_E = E
         
-        if (i>1 and (abs(E-oldE)<= 5e-5*abs(oldE))):
+        if (i>1 and (abs(E-oldE)<= 5e-4*abs(oldE))):
             print('Converged')
             break
 

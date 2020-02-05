@@ -174,7 +174,7 @@ def create_affinity(X, knn, scale = None, alg = "annoy", savepath = None, W_path
 
 
 
-### TODO: supporting functions to make parallel updates of clusters
+### supporting functions to make parallel updates of clusters
     
 def n2m(a):
    """

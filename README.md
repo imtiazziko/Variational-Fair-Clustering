@@ -3,14 +3,14 @@ This is the code for the paper **[Clustering With Fairness Constraints: A Flexib
 
 ## Prerequisites
 
-The code is based on python 3.6 and need the following  additional libraries:  
+The code is based on python 3.6+  and need the following  additional libraries which can be installed through pip:  
 * Pandas
 * Matplotlib
 * numexpr
-* ray
+* pyflann
 
 ## Usage
-To evaluate the code simply run the following which put the outputs in the [outputs](./outputs) folder.
+To evaluate the code simply run the following which put the outputs in the [outputs](./outputs) folder. Note that, the weight of the fairness term (--lmbda) can be much higher (even more than 100) to ensure fairness. --lmbda works as a trade-off between the clustering objective and fairness as discussed in the paper.
 ```
 sh evaluate_Fair_clustering.sh
 ```

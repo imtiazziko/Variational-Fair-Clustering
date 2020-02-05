@@ -11,10 +11,6 @@ from sklearn.datasets import make_blobs
 import sys
 import requests, zipfile, io
 import pandas
-import os.path as osp
-from matplotlib import pyplot as plt
-from sklearn.preprocessing import scale
-from src.util  import  saveCompressed
 
 
 
@@ -158,7 +154,7 @@ def read_dataset(name):
 #        data = data[,:]
 
     elif name=='CensusII':
-        data_path = '../data/USCensus1990raw.data.txt'
+        data_path = './data/USCensus1990raw.data.txt'
         df = pandas.read_csv(data_path, sep='\t', header = None)
         # df = pandas.read_csv(data_path,sep=',').iloc[0:,1:]
         sex_num = df.iloc[:,112].astype(int).values
@@ -188,7 +184,7 @@ if __name__=='__main__':
     V_list =  [np.array(demograph == j) for j in np.unique(demograph)]
     V_sum =  [x.sum() for x in V_list]
     print('Balance of the dataset {}'.format(min(V_sum)/max(V_sum)))
-    u_V = [x/data.shape[0] for x in V_sum]
+    u_V = [x/X_org.shape[0] for x in V_sum]
 
     
     

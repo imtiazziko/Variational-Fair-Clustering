@@ -9,38 +9,26 @@ from sklearn.metrics.pairwise import euclidean_distances as ecdist
 from sklearn.metrics import pairwise_distances_chunked as pdist_chunk
 from sklearn.cluster import KMeans
 from sklearn.cluster.k_means_ import _init_centroids
-#import multiprocessing
-
 from src.bound_update import bound_update,normalize_2, get_S_discrete
 from src.util  import get_fair_accuracy, get_fair_accuracy_proportional
 import timeit
 import src.util as util
 import multiprocessing
-import ray
-from numba import  jit, prange
+from numba import  jit
 import numexpr as ne
 
-@ray.remote
-def kmeans_update(X,tmp):
+def kmeans_update(tmp):
     """
-
     """
-    c1 = X[tmp,:].mean(axis = 0)
+    # print("ID of process running worker: {}".format(os.getpid()))
+    X = util.SHARED_VARS['X_s']
+    X_tmp = X[tmp, :]
+    c1 = X_tmp.mean(axis = 0)
 
     return c1
 
-# @ray.remote
-# def kmeans_update(X,S,k):
-#     """
-#
-#     """
-#     # pdb.set_trace()
-#     S_k = S[:,k]
-#     c1 = np.dot(X.T,S_k)/S_k.sum()
-#     return c1
-
 @jit
-def reduce_func(D_chunk, start):
+def reduce_func(D_chunk,start):
     J = np.mean(D_chunk,axis=1)
     return J
 
@@ -67,7 +55,6 @@ def NormalizedCutEnergy(A, S, clustering):
         d = A.sum(axis=1)
 
     maxclusterid = np.max(clustering)
-    #print "max cluster id is: ", maxclusterid
     nassoc_e = 0;
     num_cluster = 0;
     for k in range(maxclusterid+1):
@@ -81,7 +68,6 @@ def NormalizedCutEnergy(A, S, clustering):
         elif isinstance(A, sparse.csc_matrix):
             nassoc_e = nassoc_e + np.dot(np.transpose(S_k), A.dot(S_k)) / np.dot(np.transpose(d), S_k)
             nassoc_e = nassoc_e[0,0]
-    #print "number of clusters: ", num_cluster
     ncut_e = num_cluster - nassoc_e
 
     return ncut_e
@@ -95,7 +81,6 @@ def NormalizedCutEnergy_discrete(A, clustering):
         d = A.sum(axis=1)
 
     maxclusterid = np.max(clustering)
-    #print "max cluster id is: ", maxclusterid
     nassoc_e = 0;
     num_cluster = 0;
     for k in range(maxclusterid+1):
@@ -109,27 +94,22 @@ def NormalizedCutEnergy_discrete(A, clustering):
         elif isinstance(A, sparse.csc_matrix):
             nassoc_e = nassoc_e + np.dot(np.transpose(S_k), A.dot(S_k)) / np.dot(np.transpose(d), S_k)
             nassoc_e = nassoc_e[0,0]
-    #print "number of clusters: ", num_cluster
     ncut_e = num_cluster - nassoc_e
 
     return ncut_e
 
-@ray.remote
 def KernelBound_k(A, d, S, N, k):
     S_i = S[:,k]
     volume_s_i = np.dot(np.transpose(d), S_i)
     volume_s_i = volume_s_i[0,0]
-    #print volume_s_i
     temp = np.dot(np.transpose(S_i), A.dot(S_i)) / volume_s_i / volume_s_i
     temp = temp * d
-    #print temp.shape
     temp2 = temp + np.reshape( - 2 * A.dot(S_i) / volume_s_i, (N,1))
-    #print type(temp2)
 
     return temp2.flatten()
 
 @jit
-def km_le(X,M,method,sigma):
+def km_le(X,M):
     
     """
     Discretize the assignments based on center
@@ -149,8 +129,6 @@ def fairness_term_V_j(u_j,S,V_j):
     S_term = ne.evaluate('u_j*(log(S_sum) - log(S_term))')
     return S_term
 
-
-@ray.remote
 def km_discrete_energy(e_dist,l,k):
     tmp = np.asarray(np.where(l== k)).squeeze()
     return np.sum(e_dist[tmp,k])
@@ -168,8 +146,8 @@ def compute_energy_fair_clustering(X, C, l, S, u_V, V_list, bound_lambda, A = No
     if method_cl =='kmeans':
         e_dist = ecdist(X,C,squared =True)
         clustering_E = ne.evaluate('S*e_dist').sum()
-        clustering_E_discrete = [km_discrete_energy.remote(e_dist,l,k) for k in range(K)]
-        clustering_E_discrete = sum(ray.get(clustering_E_discrete))
+        clustering_E_discrete = [km_discrete_energy(e_dist,l,k) for k in range(K)]
+        clustering_E_discrete = sum(clustering_E_discrete)
 
     elif method_cl =='ncut':
         
@@ -179,8 +157,8 @@ def compute_energy_fair_clustering(X, C, l, S, u_V, V_list, bound_lambda, A = No
     elif method_cl =='kmedian':
         e_dist = ecdist(X,C)
         clustering_E = ne.evaluate('S*e_dist').sum()
-        clustering_E_discrete = [km_discrete_energy.remote(e_dist,l,k) for k in range(K)]
-        clustering_E_discrete = sum(ray.get(clustering_E_discrete))
+        clustering_E_discrete = [km_discrete_energy(e_dist,l,k) for k in range(K)]
+        clustering_E_discrete = sum(clustering_E_discrete)
     
     # Fairness term 
     fairness_E = [fairness_term_V_j(u_V[j],S,V_list[j]) for j in range(J)]
@@ -188,6 +166,7 @@ def compute_energy_fair_clustering(X, C, l, S, u_V, V_list, bound_lambda, A = No
     
     E = clustering_E + fairness_E
     print('fair clustering energy = {}'.format(E))
+    print('clustering energy = {}'.format(clustering_E_discrete))
 
     return E, clustering_E, fairness_E, clustering_E_discrete
     
@@ -196,21 +175,19 @@ def km_init(X,K,C_init):
     """
     Initial seeds
     """
-    
-    N,D = X.shape
     if isinstance(C_init,str):
 
         if C_init == 'kmeans_plus':
             M =_init_centroids(X,K,init='k-means++')
-            l = km_le(X,M,None,None)
+            l = km_le(X,M)
             
         elif C_init =='kmeans':
             kmeans = KMeans(n_clusters=K).fit(X)
             l =kmeans.labels_
             M = kmeans.cluster_centers_
     else:
-        M = C_init.copy(); 
-        l = km_le(X,M,None,None)
+        M = C_init.copy()
+        l = km_le(X,M)
         
     del C_init
 
@@ -240,7 +217,7 @@ def fair_clustering(X, K, u_V, V_list, lmbda, fairness = False, method = 'kmeans
     
     """ 
     
-    Proposed farness clustering method
+    Proposed fairness clustering method
     
     """
     N,D = X.shape
@@ -249,24 +226,19 @@ def fair_clustering(X, K, u_V, V_list, lmbda, fairness = False, method = 'kmeans
     C,l =  km_init(X,K,C_init)
     assert len(np.unique(l)) == K
     ts = 0
-
-    trivial_status = False # for empty cluster status
     S = []
     E_org = []
     E_cluster = []
     E_fair = []
     E_cluster_discrete = []
     fairness_error = 0.0
-    balance  = 0.0
     oldE = 1e100
 
     maxiter = 100
     X_s = util.init(X_s =X)
     pool = multiprocessing.Pool(processes=10)
     if A is not None:
-        A_s = ray.put(A)
         d =  A.sum(axis=1)
-        d_s = ray.put(d)
 
 
     for i in range(maxiter):
@@ -284,53 +256,36 @@ def fair_clustering(X, K, u_V, V_list, lmbda, fairness = False, method = 'kmeans
                 a_p = sqdist.copy()
             if method == 'ncut':
                 S = get_S_discrete(l,N,K)
-                result_id = []
-                for i in range(K):
-                    result_id.append(KernelBound_k.remote(A_s, d_s, S, N, i))
-                sqdist = ray.get(result_id)
-                sqdist = np.asarray(np.vstack(sqdist).T)
+                sqdist_list = [KernelBound_k(A, d, S, N, i) for i in range(K)]
+                sqdist = np.asarray(np.vstack(sqdist_list).T)
                 a_p = sqdist.copy()
 
             
         elif method == 'kmeans':
             
             print ('Inside k-means update')
-            result_ids = []
-            for k in range(K):
-                tmp=np.asarray(np.where(l== k))
-                if tmp.size !=1:
-                    tmp = tmp.squeeze()
-                else:
-                    tmp = tmp[0]
-
-                result_ids.append(kmeans_update.remote(X,tmp))
-
-            # # print(C)
-            C = ray.get(result_ids)
-            C = np.asarray(np.vstack(C))
+            tmp_list = [np.where(l==k)[0] for k in range(K)]
+            C_list = pool.map(kmeans_update,tmp_list)
+            C = np.asarray(np.vstack(C_list))
             sqdist = ecdist(X,C,squared=True)
             a_p = sqdist.copy()
+
         elif method == 'kmedian':
 
             print ('Inside k-median update')
             tmp_list = [np.where(l==k)[0] for k in range(K)]
-            result_ids = pool.map(kmedian_update,tmp_list)
-            C = np.asarray(np.vstack(result_ids))
+            C_list = pool.map(kmedian_update,tmp_list)
+            C = np.asarray(np.vstack(C_list))
             sqdist = ecdist(X,C)
             a_p = sqdist.copy()
 
         elif method == 'ncut':
             print ('Inside ncut update')
             S = get_S_discrete(l,N,K)
-            result_id = []
-            for i in range(K):
-                result_id.append(KernelBound_k.remote(A_s, d_s, S, N, i))
-            sqdist = ray.get(result_id)
-            sqdist = np.asarray(np.vstack(sqdist).T)
+            sqdist_list = [KernelBound_k(A, d, S, N, i) for i in range(K)]
+            sqdist = np.asarray(np.vstack(sqdist_list).T)
             a_p = sqdist.copy()
 
-    
-            
         if fairness ==True and lmbda!=0.0:
 
             l_check = a_p.argmin(axis=1)
@@ -348,9 +303,7 @@ def fair_clustering(X, K, u_V, V_list, lmbda, fairness = False, method = 'kmeans
             
             fairness_error = get_fair_accuracy_proportional(u_V,V_list,l,N,K)
             print('fairness_error = {:0.4f}'.format(fairness_error))
-        
-            
-            
+
         else:
                 
             if method == 'ncut':
@@ -374,7 +327,7 @@ def fair_clustering(X, K, u_V, V_list, lmbda, fairness = False, method = 'kmeans
             if trivial_status:
                 break
 
-        if (i>1 and (abs(currentE-oldE)<= 1e-3*abs(oldE))):
+        if (i>1 and (abs(currentE-oldE)<= 1e-4*abs(oldE))):
             print('......Job  done......')
             break
             
