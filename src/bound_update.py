@@ -7,9 +7,6 @@ from numba import  jit, prange
 import numexpr as ne
 import src.util as util
 
-# SHARED_S = {}
-# SHARED_data = {}
-
 def normalize(S_in):
 
     maxcol = S_in.max(1)[:,np.newaxis]

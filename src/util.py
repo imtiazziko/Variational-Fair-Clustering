@@ -10,7 +10,6 @@ from scipy import sparse
 import scipy.sparse as sps
 import timeit
 from pyflann import FLANN
-import pdb
 
 import zipfile
 import io
@@ -65,18 +64,28 @@ def mkdir_if_missing(directory):
             if e.errno != errno.EEXIST:
                 raise
 
-def saveCompressed(fh, **namedict):
-     with zipfile.ZipFile(fh,
-                          mode="w",
-                          compression=zipfile.ZIP_DEFLATED,
-                          allowZip64=True) as zf:
-         for k, v in namedict.items():
-             buf = io.BytesIO()
-             np.lib.npyio.format.write_array(buf,
-                                             np.asanyarray(v),
-                                             allow_pickle=False)
-             zf.writestr(k + '.npy',
-                         buf.getvalue())
+# def saveCompressed(fh, **namedict):
+#      with zipfile.ZipFile(fh,
+#                           mode="w",
+#                           compression=zipfile.ZIP_DEFLATED,
+#                           allowZip64=True) as zf:
+#          for k, v in namedict.items():
+#              buf = io.BytesIO()
+#              np.lib.npyio.format.write_array(buf,
+#                                              np.asanyarray(v),
+#                                              allow_pickle=False)
+#              zf.writestr(k + '.npy',
+#                          buf.getvalue())
+
+def str2bool(v):
+    if isinstance(v, bool):
+       return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
 
 def normalizefea(X):
     """

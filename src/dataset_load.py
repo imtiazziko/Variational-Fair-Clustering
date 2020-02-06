@@ -21,7 +21,7 @@ def dataset_names():
     return __datasets
 
 
-def read_dataset(name):
+def read_dataset(name, data_dir):
 
     data = []
     sex_num = []
@@ -58,7 +58,8 @@ def read_dataset(name):
         
     elif name == 'Adult':
         
-        data_path = '../data/adult.data'
+        _path = 'adult.data'
+        data_path = os.path.join(data_dir,_path)
         race_is_sensitive_attribute = 0
         
         if race_is_sensitive_attribute==1:
@@ -103,8 +104,8 @@ def read_dataset(name):
         
         # n= 6000
         K = 30
-        data_path = '../data/bank-additional-full.csv'
-
+        _path = 'bank-additional-full.csv'
+        data_path = os.path.join(data_dir,_path)
         if (not os.path.exists(data_path)): 
 
             print('Bank dataset does not exist in current folder --- Have to download it')
@@ -154,7 +155,8 @@ def read_dataset(name):
 #        data = data[,:]
 
     elif name=='CensusII':
-        data_path = './data/USCensus1990raw.data.txt'
+        _path = 'USCensus1990raw.data.txt'
+        data_path = os.path.join(data_dir, _path)
         df = pandas.read_csv(data_path, sep='\t', header = None)
         # df = pandas.read_csv(data_path,sep=',').iloc[0:,1:]
         sex_num = df.iloc[:,112].astype(int).values
@@ -177,9 +179,9 @@ if __name__=='__main__':
 
 
     dataset = 'CensusII'
-    X_org = np.load('../data/Census2_raw.npz')['data']
-
-    demograph = np.load('../data/Census2_demograph.npz')['demograph']
+    datas = np.load('../data/CensusII.npz')['data']
+    X_org = datas['X_org']
+    demograph = datas['demograph']
 
     V_list =  [np.array(demograph == j) for j in np.unique(demograph)]
     V_sum =  [x.sum() for x in V_list]

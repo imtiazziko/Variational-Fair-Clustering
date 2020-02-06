@@ -6,28 +6,26 @@ import numpy as np
 from src.fair_clustering import fair_clustering, km_init
 import src.util as util
 from src.dataset_load import read_dataset,dataset_names
-from src.util  import get_fair_accuracy, get_fair_accuracy_proportional, normalizefea, Logger
+from src.util  import get_fair_accuracy, get_fair_accuracy_proportional, normalizefea, Logger, str2bool
 from data_visualization import plot_clusters_vs_lambda, plot_fairness_vs_clusterE, plot_convergence, plot_balance_vs_clusterE
 import random
 import warnings
 warnings.filterwarnings('ignore')
+import pdb
 
 def  main(args):
     if args.seed is not None:
         np.random.seed(args.seed)
         random.seed(args.seed)
 
-    output_path = args.output_path
-    data_dir = args.data_dir
+    ## Options
+    dataset = args.dataset
+    cluster_option = args.cluster_option
+    data_dir = osp.join(args.data_dir, dataset)
+    output_path = data_dir
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
-    ## Select dataset
-    dataset = args.dataset
 
-    # ###  Clustering  options
-
-    cluster_option = args.cluster_option
-    
     ## plotting options
     plot_option_clusters_vs_lambda = args.plot_option_clusters_vs_lambda
     plot_option_fairness_vs_clusterE = args.plot_option_fairness_vs_clusterE
@@ -36,20 +34,25 @@ def  main(args):
     
         # ###  Data load
     savepath_compare =  osp.join(data_dir,dataset+'.npz')
-
     if not os.path.exists(savepath_compare):
-        X_org, demograph, K = read_dataset(dataset)
-        np.savez(savepath_compare, X_org = X_org, demograph = demograph, K = K)
+        X_org, demograph, K = read_dataset(dataset, data_dir)
+        if X_org.shape[0]>200000:
+            np.savez_compressed(savepath_compare, X_org = X_org, demograph = demograph, K = K)
+        else:
+            np.savez(savepath_compare, X_org=X_org, demograph=demograph, K=K)
+
     else:
         datas = np.load(savepath_compare)
         X_org = datas['X_org']
         demograph = datas['demograph']
         K = datas['K'].item()
 
-    log_path = osp.join(data_dir,dataset+'_'+cluster_option,'_log.txt')
+    log_path = osp.join(data_dir,cluster_option+'_log.txt')
     sys.stdout = Logger(log_path)
-    N, D = X_org.shape
-    print('Cluster number for dataset {}'.format(K))
+    # Normalize Features
+    X = normalizefea(X_org)
+    N, D = X.shape
+    print('Cluster number for dataset {} is {}'.format(dataset,K))
     V_list =  [np.array(demograph == j) for j in np.unique(demograph)]
     V_sum =  [x.sum() for x in V_list]
     print('Balance of the dataset {}'.format(min(V_sum)/max(V_sum)))
@@ -59,10 +62,6 @@ def  main(args):
     # demographic probability for each V_j
     
     u_V = [x/N for x in V_sum]  #proportional
-    
-    # Normalize Features
-    
-    X = normalizefea(X_org)
     
     #############################################################################
     
@@ -82,8 +81,8 @@ def  main(args):
     best_avg_balance = -1
     best_min_balance = -1
     
-    if args.lmbda is None:      
-        lmbdas = np.arange(100,200,2).tolist()
+    if args.lmbda is None:
+        lmbdas = np.arange(10,50,2).tolist()
     else:
         lmbdas = [args.lmbda]
         
@@ -94,7 +93,7 @@ def  main(args):
 
     if (not 'A' in locals()) and cluster_option == 'ncut':
         alg_option = 'flann' if N>50000 else 'None'
-        affinity_path = osp.join(data_dir,dataset+'_affinity_ncut.npz')
+        affinity_path = osp.join(data_dir, cluster_option +'_affinity_ncut.npz')
         knn = 20
         if not os.path.exists(affinity_path):
             A = util.create_affinity(X,knn,savepath = affinity_path, alg=alg_option)
@@ -102,7 +101,7 @@ def  main(args):
             A = util.create_affinity(X,knn,W_path = affinity_path)
 
     
-    init_C_path = osp.join(data_dir,dataset+'_init_{}_{}.npy'.format(cluster_option,K))
+    init_C_path = osp.join(data_dir,'_init_{}_{}.npy'.format(cluster_option,K))
     
     for count,lmbda in enumerate(lmbdas):
         print('Inside Lambda ',lmbda)
@@ -193,23 +192,23 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Clustering with Fairness Constraints")
     parser.add_argument('--seed', type=int, default=1)  # None run in a range of different lambdas
     # dataset
-    parser.add_argument('-d', '--dataset', type=str, default='Bank',
+    parser.add_argument('-d', '--dataset', type=str, default='Synthetic',
                         choices=dataset_names())
     # clustering method
-    parser.add_argument('--cluster_option', type=str, default='kmedian')
+    parser.add_argument('--cluster_option', type=str, default='ncut')
     
     # Plot options
-    parser.add_argument('--plot_option_clusters_vs_lambda', action='store_true',
+    parser.add_argument('--plot_option_clusters_vs_lambda', default=False, type=str2bool,
                         help="plot clusters in 2D w.r.t lambda")
-    parser.add_argument('--plot_option_fairness_vs_clusterE', action='store_true',
+    parser.add_argument('--plot_option_fairness_vs_clusterE', default=False, type=str2bool,
                         help="plot clustering original energy w.r.t fairness")
-    parser.add_argument('--plot_option_balance_vs_clusterE', action='store_true',
+    parser.add_argument('--plot_option_balance_vs_clusterE', default=False, type=str2bool,
                         help="plot clustering original energy w.r.t balance")
-    parser.add_argument('--plot_option_convergence', action='store_true',
+    parser.add_argument('--plot_option_convergence', default=False, type=str2bool,
                         help="plot convergence of the fair clustering energy")
     
     #Lambda
-    parser.add_argument('--lmbda', type=float, default=15) # None run in a range of different lambdas
+    parser.add_argument('--lmbda', type=float, default=50) # None run in a range of different lambdas
 
     
     # misc

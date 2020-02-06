@@ -1,0 +1,9 @@
+numpy<=1.16
+numba<=1.16
+matplotlib==3.0
+pandas
+pyflann3
+numexpr
+scipy
+scikit-learn
+requests
