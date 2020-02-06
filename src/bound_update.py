@@ -3,7 +3,7 @@ import os
 import numpy as np
 import timeit
 from src.progressBar import printProgressBar
-from numba import  jit, prange
+from numba import  jit
 import numexpr as ne
 import src.util as util
 
@@ -34,10 +34,10 @@ def bound_energy(S, S_in, a_term, b_term, L, bound_lambda, batch = False):
 
 @jit(parallel=True)
 def compute_b_j_parallel(J,S,V_list,u_V):
-    result = [compute_b_j(V_list[j],u_V[j],S) for j in prange(J)]
+    result = [compute_b_j(V_list[j],u_V[j],S) for j in range(J)]
     return result
 
-# @ray.remote
+
 def compute_b_j(V_j,u_j,S_):
     N,K = S_.shape
     V_j = V_j.astype('float')
@@ -101,7 +101,7 @@ def bound_update(a_p,u_V, V_list, bound_lambda, bound_iteration =200, debug=Fals
         # print('Bound Energy {: .4f} at iteration {} '.format(E,i))
         report_E = E
         
-        if (i>1 and (abs(E-oldE)<= 5e-4*abs(oldE))):
+        if (i>1 and (abs(E-oldE)<= 1e-3*abs(oldE))):
             print('Converged')
             break
 

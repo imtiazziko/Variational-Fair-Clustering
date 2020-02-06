@@ -9,7 +9,7 @@ from sklearn.metrics.pairwise import euclidean_distances as ecdist
 from sklearn.metrics import pairwise_distances_chunked as pdist_chunk
 from sklearn.cluster import KMeans
 from sklearn.cluster.k_means_ import _init_centroids
-from src.bound_update import bound_update,normalize_2, get_S_discrete
+from src.bound_update import bound_update, normalize_2, get_S_discrete
 from src.util  import get_fair_accuracy, get_fair_accuracy_proportional
 import timeit
 import src.util as util
@@ -98,13 +98,14 @@ def NormalizedCutEnergy_discrete(A, clustering):
 
     return ncut_e
 
+@jit
 def KernelBound_k(A, d, S, N, k):
-    S_i = S[:,k]
-    volume_s_i = np.dot(np.transpose(d), S_i)
-    volume_s_i = volume_s_i[0,0]
-    temp = np.dot(np.transpose(S_i), A.dot(S_i)) / volume_s_i / volume_s_i
+    S_k = S[:,k]
+    volume_s_k = np.dot(np.transpose(d), S_k)
+    volume_s_k = volume_s_k[0,0]
+    temp = np.dot(np.transpose(S_k), A.dot(S_k)) / volume_s_k / volume_s_k
     temp = temp * d
-    temp2 = temp + np.reshape( - 2 * A.dot(S_i) / volume_s_i, (N,1))
+    temp2 = temp + np.reshape( - 2 * A.dot(S_k) / volume_s_k, (N,1))
 
     return temp2.flatten()
 
@@ -115,7 +116,6 @@ def km_le(X,M):
     Discretize the assignments based on center
     
     """
-    
     e_dist = ecdist(X,M)          
     l = e_dist.argmin(axis=1)
         
@@ -140,7 +140,6 @@ def compute_energy_fair_clustering(X, C, l, S, u_V, V_list, bound_lambda, A = No
     """
     print('compute energy')
     J = len(u_V)
-
     N,K = S.shape
     clustering_E_discrete = []
     if method_cl =='kmeans':
@@ -199,8 +198,8 @@ def restore_nonempty_cluster (X,K,oldl,oldC,oldS,ts):
         if ts>ts_limit:
             print('not having some labels')
             trivial_status = True
-            l =oldl.copy();
-            C =oldC.copy();
+            l =oldl.copy()
+            C =oldC.copy()
             S = oldS.copy()
 
         else:
@@ -236,7 +235,7 @@ def fair_clustering(X, K, u_V, V_list, lmbda, fairness = False, method = 'kmeans
 
     maxiter = 100
     X_s = util.init(X_s =X)
-    pool = multiprocessing.Pool(processes=10)
+    pool = multiprocessing.Pool(processes=20)
     if A is not None:
         d =  A.sum(axis=1)
 
@@ -327,7 +326,7 @@ def fair_clustering(X, K, u_V, V_list, lmbda, fairness = False, method = 'kmeans
             if trivial_status:
                 break
 
-        if (i>1 and (abs(currentE-oldE)<= 1e-4*abs(oldE))):
+        if (i>1 and (abs(currentE-oldE)<= 1e-3*abs(oldE))):
             print('......Job  done......')
             break
             
