@@ -190,7 +190,7 @@ def  main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Clustering with Fairness Constraints")
-    parser.add_argument('--seed', type=int, default=1)  # None run in a range of different lambdas
+    parser.add_argument('--seed', type=int, default=None)  # None run in a range of different lambdas
     # dataset
     parser.add_argument('-d', '--dataset', type=str, default='Synthetic',
                         choices=dataset_names())

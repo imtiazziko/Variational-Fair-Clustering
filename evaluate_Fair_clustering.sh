@@ -6,7 +6,7 @@ conv=False # Check true to see if the algorithm converges.
 #Census II
 dataset=CensusII
 cluster_option=kmedian
-lmd=120
+lmd=100
 python test_fair_clustering.py -d $dataset \
                              --cluster_option $cluster_option \
                              --lmbda $lmd \
