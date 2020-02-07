@@ -82,7 +82,7 @@ def plot_balance_vs_clusterE(cluster_option, savefile, filename, lmbdas, fairnes
         else:
             data = np.load(savefile)
             lmbdas = data['lmbdas']
-            balance_set = data['avg_balance_set']
+            avg_balance_set = data['avg_balance_set']
             E_cluster_set = data['E_cluster']
         # pdb.set_trace()
         if cluster_option == 'kmeans':
@@ -106,7 +106,7 @@ def plot_balance_vs_clusterE(cluster_option, savefile, filename, lmbdas, fairnes
         # ax1.set_xlim ([0,length])
         ax2 = ax1.twinx()
 
-        ax1.plot(lmbdas[:length], balance_set[:length], '--rD' , linewidth=2.5, label = ylabel1)
+        ax1.plot(lmbdas[:length], avg_balance_set[:length], '--rD' , linewidth=2.5, label = ylabel1)
 
         ax2.plot(lmbdas[:length], E_cluster_set[:length], '--bP' , linewidth=3, label = ylabel2)
         ax1.set_xlabel(r'$\lambda$')

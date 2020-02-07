@@ -23,7 +23,7 @@ def  main(args):
     cluster_option = args.cluster_option
     data_dir = osp.join(args.data_dir, dataset)
     output_path = data_dir
-    if not os.path.exists(data_dir):
+    if not osp.exists(data_dir):
         os.makedirs(data_dir)
 
     ## plotting options
@@ -31,8 +31,8 @@ def  main(args):
     plot_option_fairness_vs_clusterE = args.plot_option_fairness_vs_clusterE
     plot_option_balance_vs_clusterE = args.plot_option_balance_vs_clusterE
     plot_option_convergence = args.plot_option_convergence
-    
-        # ###  Data load
+
+    # ###  Data load
     savepath_compare =  osp.join(data_dir,dataset+'.npz')
     if not os.path.exists(savepath_compare):
         X_org, demograph, K = read_dataset(dataset, data_dir)
@@ -81,8 +81,8 @@ def  main(args):
     best_avg_balance = -1
     best_min_balance = -1
     
-    if args.lmbda is None:
-        lmbdas = np.arange(10,50,2).tolist()
+    if args.lmbda_tune:
+        lmbdas = np.arange(10,120,5).tolist()
     else:
         lmbdas = [args.lmbda]
         
@@ -95,18 +95,17 @@ def  main(args):
         alg_option = 'flann' if N>50000 else 'None'
         affinity_path = osp.join(data_dir, cluster_option +'_affinity_ncut.npz')
         knn = 20
-        if not os.path.exists(affinity_path):
+        if not osp.exists(affinity_path):
             A = util.create_affinity(X,knn,savepath = affinity_path, alg=alg_option)
         else:
             A = util.create_affinity(X,knn,W_path = affinity_path)
 
     
-    init_C_path = osp.join(data_dir,'_init_{}_{}.npy'.format(cluster_option,K))
-    
+    init_C_path = osp.join(data_dir,'{}_init_{}_{}.npy'.format(dataset,cluster_option,K))
     for count,lmbda in enumerate(lmbdas):
         print('Inside Lambda ',lmbda)
     
-        if not os.path.exists(init_C_path):
+        if not osp.exists(init_C_path):
             print('Generating initial seeds')
             C_init,_ = km_init(X,K,'kmeans_plus')
             np.save(init_C_path,C_init)
@@ -133,8 +132,11 @@ def  main(args):
         # Plot the figure with clusters
         
         if dataset in ['Synthetic', 'Synthetic-unequal'] and plot_option_clusters_vs_lambda == True:
-            
-            filename = osp.join(output_path, 'cluster_output', 'cluster-plot_fair_{}-{}_lambda_{}.png'.format(cluster_option,dataset,lmbda))
+            cluster_plot_location = osp.join(output_path, 'cluster_output')
+            if not osp.exists(cluster_plot_location):
+                os.makedirs(cluster_plot_location)
+
+            filename = osp.join(cluster_plot_location, 'cluster-plot_fair_{}-{}_lambda_{}.png'.format(cluster_option,dataset,lmbda))
             plot_clusters_vs_lambda(X_org,l,filename,dataset,lmbda, min_balance_set, avg_balance_set,fairness_error)
     #
         if avg_balance>best_avg_balance:
@@ -150,7 +152,7 @@ def  main(args):
             best_lambda_acc = lmbda
             
             
-        if plot_option_convergence == True:
+        if plot_option_convergence == True and count==0:
             
             filename = osp.join(output_path,'Fair_{}_convergence_{}.png'.format(cluster_option,dataset))
             E_fair = E['fair_cluster_E']
@@ -179,7 +181,7 @@ def  main(args):
         savefile = osp.join(data_dir,'Fair_{}_fairness_vs_clusterEdiscrete_{}.npz'.format(cluster_option,dataset))
         filename = osp.join(output_path,'Fair_{}_fairness_vs_clusterEdiscrete_{}.png'.format(cluster_option,dataset))
         plot_fairness_vs_clusterE(cluster_option, savefile, filename, lmbdas, fairness_error_set, min_balance_set, avg_balance_set, E_cluster_discrete_set)
-
+    pdb.set_trace()
     if plot_option_balance_vs_clusterE == True and length_lmbdas > 1:
 
         savefile = osp.join(data_dir,'Fair_{}_balance_vs_clusterEdiscrete_{}.npz'.format(cluster_option,dataset))
@@ -190,9 +192,9 @@ def  main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Clustering with Fairness Constraints")
-    parser.add_argument('--seed', type=int, default=None)  # None run in a range of different lambdas
+    parser.add_argument('--seed', type=int, default=1)  # None run in a range of different lambdas
     # dataset
-    parser.add_argument('-d', '--dataset', type=str, default='Synthetic',
+    parser.add_argument('-d', '--dataset', type=str, default='Synthetic-unequal',
                         choices=dataset_names())
     # clustering method
     parser.add_argument('--cluster_option', type=str, default='ncut')
@@ -202,13 +204,14 @@ if __name__ == '__main__':
                         help="plot clusters in 2D w.r.t lambda")
     parser.add_argument('--plot_option_fairness_vs_clusterE', default=False, type=str2bool,
                         help="plot clustering original energy w.r.t fairness")
-    parser.add_argument('--plot_option_balance_vs_clusterE', default=False, type=str2bool,
+    parser.add_argument('--plot_option_balance_vs_clusterE', default=True, type=str2bool,
                         help="plot clustering original energy w.r.t balance")
     parser.add_argument('--plot_option_convergence', default=False, type=str2bool,
                         help="plot convergence of the fair clustering energy")
     
     #Lambda
-    parser.add_argument('--lmbda', type=float, default=50) # None run in a range of different lambdas
+    parser.add_argument('--lmbda', type=float, default=50) # specified lambda
+    parser.add_argument('--lmbda-tune', type=str2bool, default=True)  # run in a range of different lambdas
 
     
     # misc

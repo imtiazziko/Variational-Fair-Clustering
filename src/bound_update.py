@@ -54,9 +54,7 @@ def compute_b_j(V_j,u_j,S_):
 def get_S_discrete(l,N,K):
     x = range(N)
     temp =  np.zeros((N,K),dtype=float)
-    index_cluster = l[x]
-    temp[(x,index_cluster)]=1
-#    temp = temp.sum(0)
+    temp[(x,l)]=1
     return temp
 
             
@@ -66,7 +64,7 @@ def bound_update(a_p,u_V, V_list, bound_lambda, bound_iteration =200, debug=Fals
     """
     start_time = timeit.default_timer()
     print("Inside Bound Update . . .")
-    N,K = a_p.shape;
+    N,K = a_p.shape
     oldE = float('inf')
     J = len(u_V)
     
@@ -101,7 +99,7 @@ def bound_update(a_p,u_V, V_list, bound_lambda, bound_iteration =200, debug=Fals
         # print('Bound Energy {: .4f} at iteration {} '.format(E,i))
         report_E = E
         
-        if (i>1 and (abs(E-oldE)<= 1e-3*abs(oldE))):
+        if (i>1 and (abs(E-oldE)<= 1e-5*abs(oldE))):
             print('Converged')
             break
 

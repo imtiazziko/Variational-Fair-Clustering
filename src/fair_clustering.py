@@ -98,9 +98,9 @@ def NormalizedCutEnergy_discrete(A, clustering):
 
     return ncut_e
 
-@jit
-def KernelBound_k(A, d, S, N, k):
-    S_k = S[:,k]
+# @jit
+def KernelBound_k(A, d, S_k, N):
+    # S_k = S[:,k]
     volume_s_k = np.dot(np.transpose(d), S_k)
     volume_s_k = volume_s_k[0,0]
     temp = np.dot(np.transpose(S_k), A.dot(S_k)) / volume_s_k / volume_s_k
@@ -255,7 +255,7 @@ def fair_clustering(X, K, u_V, V_list, lmbda, fairness = False, method = 'kmeans
                 a_p = sqdist.copy()
             if method == 'ncut':
                 S = get_S_discrete(l,N,K)
-                sqdist_list = [KernelBound_k(A, d, S, N, i) for i in range(K)]
+                sqdist_list = [KernelBound_k(A, d, S[:,k], N) for k in range(K)]
                 sqdist = np.asarray(np.vstack(sqdist_list).T)
                 a_p = sqdist.copy()
 
@@ -281,7 +281,7 @@ def fair_clustering(X, K, u_V, V_list, lmbda, fairness = False, method = 'kmeans
         elif method == 'ncut':
             print ('Inside ncut update')
             S = get_S_discrete(l,N,K)
-            sqdist_list = [KernelBound_k(A, d, S, N, i) for i in range(K)]
+            sqdist_list = [KernelBound_k(A, d, S[:,k], N) for k in range(K)]
             sqdist = np.asarray(np.vstack(sqdist_list).T)
             a_p = sqdist.copy()
 
@@ -326,7 +326,7 @@ def fair_clustering(X, K, u_V, V_list, lmbda, fairness = False, method = 'kmeans
             if trivial_status:
                 break
 
-        if (i>1 and (abs(currentE-oldE)<= 1e-3*abs(oldE))):
+        if (i>1 and (abs(currentE-oldE)<= 7e-4*abs(oldE))):
             print('......Job  done......')
             break
             
