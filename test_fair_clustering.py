@@ -11,7 +11,6 @@ from data_visualization import plot_clusters_vs_lambda, plot_fairness_vs_cluster
 import random
 import warnings
 warnings.filterwarnings('ignore')
-import pdb
 
 def  main(args):
     if args.seed is not None:
@@ -181,7 +180,7 @@ def  main(args):
         savefile = osp.join(data_dir,'Fair_{}_fairness_vs_clusterEdiscrete_{}.npz'.format(cluster_option,dataset))
         filename = osp.join(output_path,'Fair_{}_fairness_vs_clusterEdiscrete_{}.png'.format(cluster_option,dataset))
         plot_fairness_vs_clusterE(cluster_option, savefile, filename, lmbdas, fairness_error_set, min_balance_set, avg_balance_set, E_cluster_discrete_set)
-    pdb.set_trace()
+
     if plot_option_balance_vs_clusterE == True and length_lmbdas > 1:
 
         savefile = osp.join(data_dir,'Fair_{}_balance_vs_clusterEdiscrete_{}.npz'.format(cluster_option,dataset))

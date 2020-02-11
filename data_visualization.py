@@ -153,12 +153,6 @@ if __name__ == '__main__':
     output_path = 'outputs'
     savefile = osp.join(data_dir,'Fair_{}_fairness_vs_clusterEdiscrete_{}.npz'.format(cluster_option,dataset))
     filename = osp.join(output_path,'Fair_{}_fairness_vs_clusterEdiscrete_{}.png'.format(cluster_option,dataset))
-    # plot_fairness_vs_clusterE(cluster_option, savefile, filename, lmbdas, fairness_error_set, E_cluster_set)
-    # data = np.load(savefile)
-    # lmbdas = data['lmbdas']
-    # fairness_error_set = data['fairness_error']
-    # E_cluster_set = data['E_cluster']
-    # print(min(E_cluster_set))
     plot_fairness_vs_clusterE(cluster_option, savefile, filename, [], [], [], [],[], save = False)
 
 
