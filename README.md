@@ -3,7 +3,7 @@ This is the code for the paper **[Clustering With Fairness Constraints: A Flexib
 
 ## Requirements
 1. The code is tested on python 3.6. Install the requirements listed in ([requirements.txt](./requirements.txt)) using pip or conda.
-2. Download the datasets other than the synthetics from the respective links given in the papers and put in the respective [data/[dataset]](./data) directory.
+2. Download the datasets other than the synthetics from the respective links given in the paper and put in the respective [data/[dataset]](./data) directory.
 
 ## Usage
 To evaluate the code simply run the following script: 
