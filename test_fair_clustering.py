@@ -136,7 +136,7 @@ def  main(args):
                 os.makedirs(cluster_plot_location)
 
             filename = osp.join(cluster_plot_location, 'cluster-plot_fair_{}-{}_lambda_{}.png'.format(cluster_option,dataset,lmbda))
-            plot_clusters_vs_lambda(X_org,l,filename,dataset,lmbda, min_balance_set, avg_balance_set,fairness_error)
+            plot_clusters_vs_lambda(X_org, l, filename, dataset, lmbda, fairness_error)
     #
         if avg_balance>best_avg_balance:
            best_avg_balance = avg_balance

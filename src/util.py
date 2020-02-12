@@ -10,9 +10,6 @@ from scipy import sparse
 import scipy.sparse as sps
 import timeit
 from pyflann import FLANN
-
-import zipfile
-import io
 import multiprocessing
 
 SHARED_VARS = {}
@@ -63,19 +60,6 @@ def mkdir_if_missing(directory):
         except OSError as e:
             if e.errno != errno.EEXIST:
                 raise
-
-# def saveCompressed(fh, **namedict):
-#      with zipfile.ZipFile(fh,
-#                           mode="w",
-#                           compression=zipfile.ZIP_DEFLATED,
-#                           allowZip64=True) as zf:
-#          for k, v in namedict.items():
-#              buf = io.BytesIO()
-#              np.lib.npyio.format.write_array(buf,
-#                                              np.asanyarray(v),
-#                                              allow_pickle=False)
-#              zf.writestr(k + '.npy',
-#                          buf.getvalue())
 
 def str2bool(v):
     if isinstance(v, bool):

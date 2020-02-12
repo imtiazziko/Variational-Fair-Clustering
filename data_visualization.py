@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 import os.path as osp
 
 
-def plot_clusters_vs_lambda(X_org,l,filename,dataset, lmbda, min_balance_set, avg_balance_set,fairness_error):
+def plot_clusters_vs_lambda(X_org,l,filename,dataset, lmbda, fairness_error):
 
         K = max(l) +1
         COLORSX = np.array(['rD','gP'])
@@ -16,8 +16,7 @@ def plot_clusters_vs_lambda(X_org,l,filename,dataset, lmbda, min_balance_set, av
             idx = np.asarray(np.where(l == k)).squeeze()
             plt.plot(X_org[idx,0],X_org[idx,1],COLORSX[k],label = group[k]);
         
-        if dataset == 'Synthetic':        
-            # tmp_title = '$\lambda$ = {}, Avg. balance = {: .2f}'.format(lmbda,balance)
+        if dataset == 'Synthetic':
             tmp_title = '$\lambda$ = {}, fairness Error = {: .2f}'.format(lmbda,fairness_error)
         else:
              tmp_title = '$\lambda$ = {}, fairness Error = {: .2f}'.format(lmbda,fairness_error)
