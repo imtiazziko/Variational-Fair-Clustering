@@ -151,6 +151,18 @@ def read_dataset(name, data_dir):
     elif name=='CensusII':
         _path = 'USCensus1990raw.data.txt'
         data_path = os.path.join(data_dir, _path)
+
+        if (not os.path.exists(data_path)):
+
+            print('CensusII dataset does not exist in current folder --- Have to download it')
+            r = requests.get('https://archive.ics.uci.edu/ml/machine-learning-databases/census1990-mld/USCensus1990raw.data.txt', allow_redirects=True)
+            if r.status_code == requests.codes.ok:
+                print('Download successful')
+            else:
+                print('Could not download - please download')
+                sys.exit()
+
+            open(data_path, 'wb').write(r.content)
         df = pandas.read_csv(data_path, sep='\t', header = None)
         # df = pandas.read_csv(data_path,sep=',').iloc[0:,1:]
         sex_num = df.iloc[:,112].astype(int).values

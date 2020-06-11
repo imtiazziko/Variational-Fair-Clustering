@@ -323,11 +323,11 @@ def fair_clustering(X, K, u_V, V_list, lmbda, fairness = False, method = 'kmeans
             if trivial_status:
                 break
 
-        if (i>1 and (abs(currentE-oldE)<= 7e-4*abs(oldE))):
+
+        if (i>1 and (abs(currentE-oldE)<= 7e-6*abs(oldE))):
             print('......Job  done......')
             break
-            
-        
+
         else:       
             oldE = currentE.copy()
 

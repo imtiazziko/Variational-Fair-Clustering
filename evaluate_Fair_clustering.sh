@@ -18,7 +18,7 @@ python test_fair_clustering.py -d $dataset \
 
 # dataset=Synthetic-unequal
 # cluster_option=kmeans
-# lmd=50
+# lmd=60.0
 # python test_fair_clustering.py -d $dataset \
 #                              --cluster_option $cluster_option \
 #                              --lmbda-tune $lmd_tune \
@@ -41,7 +41,7 @@ python test_fair_clustering.py -d $dataset \
 ##Census II
 #dataset=CensusII
 #cluster_option=kmedian
-#lmd=100
+#lmd=100000
 #python test_fair_clustering.py -d $dataset \
 #                             --cluster_option $cluster_option \
 #                             --lmbda $lmd \
