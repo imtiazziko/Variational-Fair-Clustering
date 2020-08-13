@@ -1,5 +1,5 @@
-numpy<=1.16
-numba<=1.16
+numpy
+numba
 matplotlib==3.0
 pandas
 pyflann3

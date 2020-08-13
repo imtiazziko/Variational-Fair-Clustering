@@ -1,12 +1,9 @@
-
 import numpy as np
 import os
 from sklearn.datasets import make_blobs
 import sys
 import requests, zipfile, io
 import pandas
-
-
 
 __datasets = ['Adult', 'Bank', 'Synthetic', 'Synthetic-unequal', 'CensusII']
 
@@ -61,7 +58,7 @@ def read_dataset(name, data_dir):
         else:
             m = 2
         # n = 25000
-        K = 30
+        K = 10
         if (not os.path.exists(data_path)): 
             print('Adult data set does not exist in current folder --- Have to download it')
             r = requests.get('https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data', allow_redirects=True)
@@ -89,21 +86,23 @@ def read_dataset(name, data_dir):
         df = df.iloc[:,cont_types]
         data = np.array(df.values, dtype=float)
         
-        data = data[:,[0,1,2,5]]
+        data = data[:,[0,1,2,3,5]]
         
         #Scale data
         # data = scale(data, axis = 0)
 
     elif name == 'Bank':
-        
         # n= 6000
-        K = 30
-        _path = 'bank-additional-full.csv'
+        # K = 4
+        K = 10
+        _path = 'bank-additional-full.csv' # Big dataset with 41108 samples
+        # _path = 'bank.csv' # most approaches use this small version with 4521 samples
         data_path = os.path.join(data_dir,_path)
         if (not os.path.exists(data_path)): 
 
             print('Bank dataset does not exist in current folder --- Have to download it')
             r = requests.get('https://archive.ics.uci.edu/ml/machine-learning-databases/00222/bank-additional.zip', allow_redirects=True)
+            # r = requests.get('https://archive.ics.uci.edu/ml/machine-learning-databases/00222/bank.zip', allow_redirects=True)
             if r.status_code == requests.codes.ok:
                 print('Download successful')
             else:
@@ -113,6 +112,7 @@ def read_dataset(name, data_dir):
             z = zipfile.ZipFile(io.BytesIO(r.content))
             # z.extract('bank-additional/bank-additional-full.csv','./data')
             open(data_path, 'wb').write(z.read('bank-additional/bank-additional-full.csv'))
+            # open(data_path, 'wb').write(z.read('bank.csv'))
 
         df = pandas.read_csv(data_path,sep=';')
         print(df.columns)
@@ -121,10 +121,10 @@ def read_dataset(name, data_dir):
 #        df = df.loc[np.random.choice(df.index, n, replace=False)]
         sex = df['marital'].astype(str).values
         sens_attributes = list(set(sex))
-        sens_attributes.remove('unknown')
-        # df1 = df.loc[df['marital'] == sens_attributes[0]][:n]
-        # df2 = df.loc[df['marital'] == sens_attributes[1]][:n]
-        # df3 = df.loc[df['marital'] == sens_attributes[2]][:n]
+
+        if 'unknown' in sens_attributes:
+            sens_attributes.remove('unknown')
+
         df1 = df.loc[df['marital'] == sens_attributes[0]]
         df2 = df.loc[df['marital'] == sens_attributes[1]]
         df3 = df.loc[df['marital'] == sens_attributes[2]]
@@ -135,6 +135,7 @@ def read_dataset(name, data_dir):
         sex = df['marital'].astype(str).values
         
         df = df[['age','duration','euribor3m', 'nr.employed', 'cons.price.idx', 'campaign']].values
+        # df = df[['age','duration','balance']].values
 
         sens_attributes = list(set(sex))
         sex_num = np.zeros(df.shape[0], dtype=int)
@@ -142,11 +143,8 @@ def read_dataset(name, data_dir):
         sex_num[sex == sens_attributes[2]] = 2
 
         data = np.array(df, dtype=float)
-        
-        #Scale data
-        # data = scale(data, axis = 0)
-#        
-#        data = data[,:]
+
+
 
     elif name=='CensusII':
         _path = 'USCensus1990raw.data.txt'

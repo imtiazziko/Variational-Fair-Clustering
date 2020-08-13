@@ -1,4 +1,3 @@
-import os
 import numpy as np
 from scipy import sparse
 import math
@@ -166,7 +165,7 @@ def compute_energy_fair_clustering(X, C, l, S, u_V, V_list, bound_lambda, A = No
 
     return E, clustering_E, fairness_E, clustering_E_discrete
     
-def km_init(X,K,C_init):
+def km_init(X, K, C_init, l_init= None):
     
     """
     Initial seeds
@@ -183,9 +182,10 @@ def km_init(X,K,C_init):
             M = kmeans.cluster_centers_
     else:
         M = C_init.copy()
-        l = km_le(X,M)
-        
-    del C_init
+        # l = km_le(X,M)
+        l = l_init.copy()
+
+    del C_init, l_init
 
     return M,l
 
@@ -209,7 +209,8 @@ def restore_nonempty_cluster (X,K,oldl,oldC,oldS,ts):
         
         return l,C,S,trivial_status
 
-def fair_clustering(X, K, u_V, V_list, lmbda, fairness = False, method = 'kmeans', C_init = "kmeans_plus", A = None):
+def fair_clustering(X, K, u_V, V_list, lmbda, fairness = False, method = 'kmeans', C_init = "kmeans_plus",
+                    l_init = None, A = None):
     
     """ 
     
@@ -219,7 +220,7 @@ def fair_clustering(X, K, u_V, V_list, lmbda, fairness = False, method = 'kmeans
     N,D = X.shape
     start_time = timeit.default_timer()
     
-    C,l =  km_init(X,K,C_init)
+    C,l =  km_init(X, K, C_init, l_init = l_init)
     assert len(np.unique(l)) == K
     ts = 0
     S = []
@@ -296,7 +297,6 @@ def fair_clustering(X, K, u_V, V_list, lmbda, fairness = False, method = 'kmeans
             bound_iterations = 1000
 
             l,S,bound_E = bound_update(a_p, u_V, V_list, lmbda, bound_iterations)
-            
             fairness_error = get_fair_accuracy_proportional(u_V,V_list,l,N,K)
             print('fairness_error = {:0.4f}'.format(fairness_error))
 
@@ -324,7 +324,7 @@ def fair_clustering(X, K, u_V, V_list, lmbda, fairness = False, method = 'kmeans
                 break
 
 
-        if (i>1 and (abs(currentE-oldE)<= 7e-6*abs(oldE))):
+        if (i>1 and (abs(currentE-oldE)<= 1e-4*abs(oldE))):
             print('......Job  done......')
             break
 
