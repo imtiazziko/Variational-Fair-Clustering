@@ -97,7 +97,7 @@ def bound_update(a_p, u_V, V_list, bound_lambda, bound_iteration = 200, debug=Fa
                 S = S_in.copy()
 
         E = bound_energy(S, S_in, a_p, b_term, L, bound_lambda)
-        print('Bound Energy {} at iteration {} '.format(E,i))
+        # print('Bound Energy {} at iteration {} '.format(E,i))
         report_E = E
         
         if (i>1 and (abs(E-oldE)<= 1e-5*abs(oldE))):
