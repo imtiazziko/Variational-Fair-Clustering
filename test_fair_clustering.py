@@ -89,7 +89,7 @@ def  main(args):
 
     if args.lmbda_tune:
         print('Lambda tune is true')
-        lmbdas = np.arange(100,5000,100).tolist()
+        lmbdas = np.arange(0,10000,100).tolist()
     else:
         lmbdas = [args.lmbda]
 
@@ -100,7 +100,7 @@ def  main(args):
 
     if (not 'A' in locals()) and cluster_option == 'ncut':
         alg_option = 'flann' if N>50000 else 'None'
-        affinity_path = osp.join(data_dir, cluster_option +'_affinity_ncut.npz')
+        affinity_path = osp.join(data_dir, dataset +'_affinity_ncut.npz')
         knn = 20
         if not osp.exists(affinity_path):
             A = util.create_affinity(X,knn,savepath = affinity_path, alg=alg_option)
@@ -119,6 +119,7 @@ def  main(args):
         l_init = temp ['l_init']
 
     for count,lmbda in enumerate(lmbdas):
+
         print('Inside Lambda ',lmbda)
 
         if cluster_option == 'ncut':
@@ -207,7 +208,7 @@ if __name__ == '__main__':
                         help="plot clusters in 2D w.r.t lambda")
     parser.add_argument('--plot_option_fairness_vs_clusterE', default=False, type=str2bool,
                         help="plot clustering original energy w.r.t fairness")
-    parser.add_argument('--plot_option_balance_vs_clusterE', default=True, type=str2bool,
+    parser.add_argument('--plot_option_balance_vs_clusterE', default=False, type=str2bool,
                         help="plot clustering original energy w.r.t balance")
     parser.add_argument('--plot_option_convergence', default=False, type=str2bool,
                         help="plot convergence of the fair clustering energy")

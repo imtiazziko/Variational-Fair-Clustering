@@ -12,7 +12,7 @@ import src.util as util
 import multiprocessing
 from numba import  jit
 import numexpr as ne
-
+# import pdb
 def kmeans_update(tmp):
     """
     """
@@ -99,7 +99,7 @@ def KernelBound_k(A, d, S_k, N):
     # S_k = S[:,k]
     volume_s_k = np.dot(np.transpose(d), S_k)
     volume_s_k = volume_s_k[0,0]
-    temp = np.dot(np.transpose(S_k), A.dot(S_k)) / volume_s_k / volume_s_k
+    temp = np.dot(np.transpose(S_k), A.dot(S_k)) / (volume_s_k * volume_s_k)
     temp = temp * d
     temp2 = temp + np.reshape( - 2 * A.dot(S_k) / volume_s_k, (N,1))
 
@@ -160,6 +160,7 @@ def compute_energy_fair_clustering(X, C, l, S, u_V, V_list, bound_lambda, A = No
     fairness_E = (bound_lambda*sum(fairness_E)).sum()
     
     E = clustering_E + fairness_E
+
     print('fair clustering energy = {}'.format(E))
     print('clustering energy = {}'.format(clustering_E_discrete))
 
@@ -219,7 +220,6 @@ def fair_clustering(X, K, u_V, V_list, lmbda, fairness = False, method = 'kmeans
     """
     N,D = X.shape
     start_time = timeit.default_timer()
-    
     C,l =  km_init(X, K, C_init, l_init = l_init)
     assert len(np.unique(l)) == K
     ts = 0
@@ -251,6 +251,7 @@ def fair_clustering(X, K, u_V, V_list, lmbda, fairness = False, method = 'kmeans
             if method == 'kmedian':
                 sqdist = ecdist(X,C)
                 a_p = sqdist.copy()
+
             if method == 'ncut':
                 S = get_S_discrete(l,N,K)
                 sqdist_list = [KernelBound_k(A, d, S[:,k], N) for k in range(K)]
@@ -294,7 +295,7 @@ def fair_clustering(X, K, u_V, V_list, lmbda, fairness = False, method = 'kmeans
                 if trivial_status:
                     break
                 
-            bound_iterations = 1000
+            bound_iterations = 5000
 
             l,S,bound_E = bound_update(a_p, u_V, V_list, lmbda, bound_iterations)
             fairness_error = get_fair_accuracy_proportional(u_V,V_list,l,N,K)
@@ -308,7 +309,7 @@ def fair_clustering(X, K, u_V, V_list, lmbda, fairness = False, method = 'kmeans
             
             else:
                 S = get_S_discrete(l,N,K)
-                l = km_le(X,C,None,None)
+                l = km_le(X,C)
             
         currentE, clusterE, fairE, clusterE_discrete = compute_energy_fair_clustering(X, C, l, S, u_V, V_list,lmbda, A = A, method_cl=method)
         E_org.append(currentE)

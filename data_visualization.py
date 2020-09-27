@@ -1,7 +1,8 @@
+import matplotlib
+matplotlib.use('Agg')
 import numpy as np
 from matplotlib import pyplot as plt
 import os.path as osp
-
 
 def plot_clusters_vs_lambda(X_org,l,filename,dataset, lmbda, fairness_error):
 
@@ -29,7 +30,6 @@ def plot_clusters_vs_lambda(X_org,l,filename,dataset, lmbda, fairness_error):
 
 def plot_fairness_vs_clusterE(cluster_option, savefile, filename, lmbdas, fairness_error_set, min_balance_set, avg_balance_set, E_cluster_set, save = True):
 
-    
         if not osp.exists(savefile) or save == True:
             np.savez(savefile, lmbdas = lmbdas, min_balance_set = min_balance_set, avg_balance_set = avg_balance_set, fairness_error = fairness_error_set, E_cluster = E_cluster_set)
         else:
@@ -43,7 +43,7 @@ def plot_fairness_vs_clusterE(cluster_option, savefile, filename, lmbdas, fairne
         elif cluster_option == 'ncut':
             label_cluster = 'Ncut'
         elif cluster_option == 'kmedian':
-            label_cluster = 'K-median'
+            label_cluster = 'K-medians'
             
         dataset = (filename.split('_')[-1].split('.'))[0]
         
@@ -73,6 +73,45 @@ def plot_fairness_vs_clusterE(cluster_option, savefile, filename, lmbdas, fairne
         plt.show()
         plt.close('all')
 
+def plot_K_vs_clusterE(cluster_option, savefile, filename, K_list, E_cluster_set, E_0_cluster_set, save = True):
+
+        if not osp.exists(savefile) or save == True:
+            np.savez(savefile, K_list = K_list, E_cluster_set = E_cluster_set, E_0_cluster_set = E_0_cluster_set)
+        else:
+            data = np.load(savefile)
+            K_list = data['K_list']
+            E_cluster_set = data['E_cluster_set']
+            E_0_cluster_set = data['E_0_cluster_set']
+        # pdb.set_trace()
+        if cluster_option == 'kmeans':
+            label_cluster = 'K-means'
+        elif cluster_option == 'ncut':
+            label_cluster = 'Ncut'
+        elif cluster_option == 'kmedian':
+            label_cluster = 'K-medians'
+
+        dataset = (filename.split('_')[-1].split('.'))[0]
+
+        title = '{} Dataset ---- Fair {}'.format(dataset,label_cluster)
+
+        ylabel = '{} discrete energy'.format(label_cluster)
+
+        legend_1 = 'Variational Fair {}'.format(label_cluster)
+        legend_2 = 'Vanilla {}'.format(label_cluster)
+
+        plt.figure(1,figsize=(6.4,4.8))
+        plt.ion()
+        plt.clf()
+        plt.plot(K_list, E_cluster_set, '--gD' , linewidth=2.2)
+        plt.plot(K_list, E_0_cluster_set, '--bP' , linewidth=2.2)
+        plt.xlabel('Number of clusters (K)')
+        plt.ylabel(ylabel)
+        plt.legend([legend_1, legend_2], loc='upper center')
+        plt.savefig(filename, format='png', dpi = 800, bbox_inches='tight')
+        plt.show()
+        plt.close('all')
+
+
 def plot_balance_vs_clusterE(cluster_option, savefile, filename, lmbdas, fairness_error_set, min_balance_set, avg_balance_set, E_cluster_set, save = True):
 
 
@@ -89,7 +128,7 @@ def plot_balance_vs_clusterE(cluster_option, savefile, filename, lmbdas, fairnes
         elif cluster_option == 'ncut':
             label_cluster = 'Ncut'
         elif cluster_option == 'kmedian':
-            label_cluster = 'K-median'
+            label_cluster = 'K-medians'
 
         dataset = (filename.split('_')[-1].split('.'))[0]
 
@@ -129,7 +168,7 @@ def plot_convergence(cluster_option, filename, E_fair):
     elif cluster_option == 'ncut':
         label_cluster = 'Ncut'
     elif cluster_option == 'kmedian':
-        label_cluster = 'K-median'
+        label_cluster = 'K-medians'
         
     length = len(E_fair)
     iter_range  = list(range(1,length+1))
@@ -146,15 +185,17 @@ def plot_convergence(cluster_option, filename, E_fair):
     plt.close('all')
     
 if __name__ == '__main__':
-    cluster_option = 'ncut'
-    data_dir = 'data'
+    cluster_option = 'kmedian'
+    data_dir = 'data/Bank'
     dataset = 'Bank'
     output_path = 'outputs'
-    savefile = osp.join(data_dir,'Fair_{}_fairness_vs_clusterEdiscrete_{}.npz'.format(cluster_option,dataset))
-    filename = osp.join(output_path,'Fair_{}_fairness_vs_clusterEdiscrete_{}.png'.format(cluster_option,dataset))
-    plot_fairness_vs_clusterE(cluster_option, savefile, filename, [], [], [], [],[], save = False)
-
-
+    savefile = osp.join(data_dir,'Fair_{}_K_vs_clusterEdiscrete_{}.npz'.format(cluster_option,dataset))
+    filename = osp.join(data_dir,'Fair_{}_K_vs_clusterEdiscrete_{}_2.png'.format(cluster_option,dataset))
+    plot_K_vs_clusterE(cluster_option, savefile, filename, [], [], [], save=False)
+    #
+    # savefile = osp.join(data_dir,'Fair_{}_fairness_vs_clusterEdiscrete_{}.npz'.format(cluster_option,dataset))
+    # filename = osp.join(data_dir,'Fair_{}_fairness_vs_clusterEdiscrete_{}.png'.format(cluster_option,dataset))
+    # plot_fairness_vs_clusterE(cluster_option, savefile, filename, [], [], [], [], [], save = False)
     
     
     

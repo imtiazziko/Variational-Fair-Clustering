@@ -26,7 +26,7 @@ def normalize_2(S_in):
 def bound_energy(S, S_in, a_term, b_term, L, bound_lambda, batch = False):
 
     E = np.nansum((S*np.log(np.maximum(S,1e-15)) - S*np.log(np.maximum(S_in,1e-15)) + a_term*S + b_term*S))
-               
+
     return E
 
 @jit(parallel=True)
@@ -100,7 +100,7 @@ def bound_update(a_p, u_V, V_list, bound_lambda, bound_iteration = 200, debug=Fa
         print('Bound Energy {} at iteration {} '.format(E,i))
         report_E = E
         
-        if (i>1 and (abs(E-oldE)<= 1e-6*abs(oldE))):
+        if (i>1 and (abs(E-oldE)<= 1e-5*abs(oldE))):
             print('Converged')
             break
 
