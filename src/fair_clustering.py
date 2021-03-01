@@ -6,9 +6,9 @@ from sklearn.metrics import pairwise_distances_chunked as pdist_chunk
 from sklearn.cluster import KMeans
 from sklearn.cluster.k_means_ import _init_centroids
 from src.bound_update import bound_update, normalize_2, get_S_discrete
-from src.util  import get_fair_accuracy, get_fair_accuracy_proportional
+from src.utils  import get_fair_accuracy, get_fair_accuracy_proportional
 import timeit
-import src.util as util
+import src.utils as utils
 import multiprocessing
 from numba import  jit
 import numexpr as ne
@@ -17,7 +17,7 @@ def kmeans_update(tmp):
     """
     """
     # print("ID of process running worker: {}".format(os.getpid()))
-    X = util.SHARED_VARS['X_s']
+    X = utils.SHARED_VARS['X_s']
     X_tmp = X[tmp, :]
     c1 = X_tmp.mean(axis = 0)
 
@@ -34,7 +34,7 @@ def kmedian_update(tmp):
 
     """
     # print("ID of process running worker: {}".format(os.getpid()))
-    X = util.SHARED_VARS['X_s']
+    X = utils.SHARED_VARS['X_s']
     X_tmp = X[tmp,:]
     D = pdist_chunk(X_tmp,reduce_func=reduce_func)
     J = next(D)
@@ -232,7 +232,7 @@ def fair_clustering(X, K, u_V, V_list, lmbda, fairness = False, method = 'kmeans
     oldE = 1e100
 
     maxiter = 100
-    X_s = util.init(X_s =X)
+    X_s = utils.init(X_s =X)
     pool = multiprocessing.Pool(processes=20)
     if A is not None:
         d =  A.sum(axis=1)

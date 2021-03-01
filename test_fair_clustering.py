@@ -5,9 +5,9 @@ import os.path as osp
 import numpy as np
 from sklearn.preprocessing import scale
 from src.fair_clustering import fair_clustering, km_init
-import src.util as util
+import src.utils as utils
 from src.dataset_load import read_dataset,dataset_names
-from src.util  import get_fair_accuracy, get_fair_accuracy_proportional, normalizefea, Logger, str2bool
+from src.utils  import get_fair_accuracy, get_fair_accuracy_proportional, normalizefea, Logger, str2bool
 from data_visualization import plot_clusters_vs_lambda, plot_fairness_vs_clusterE, plot_convergence, plot_balance_vs_clusterE
 import random
 import warnings
@@ -103,9 +103,9 @@ def  main(args):
         affinity_path = osp.join(data_dir, dataset +'_affinity_ncut.npz')
         knn = 20
         if not osp.exists(affinity_path):
-            A = util.create_affinity(X,knn,savepath = affinity_path, alg=alg_option)
+            A = utils.create_affinity(X, knn, savepath = affinity_path, alg=alg_option)
         else:
-            A = util.create_affinity(X,knn,W_path = affinity_path)
+            A = utils.create_affinity(X, knn, W_path = affinity_path)
 
     init_C_path = osp.join(data_dir,'{}_init_{}_{}.npz'.format(dataset,cluster_option,K))
     if not osp.exists(init_C_path):
