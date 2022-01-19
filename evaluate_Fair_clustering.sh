@@ -6,9 +6,9 @@ f_v_E=False # Set true to check the fairness error vs Discrete clustering energy
 conv=False # Set true to see if the algorithm converges.
 lmd_tune=False
 
-dataset=Synthetic-unequal
+dataset=Synthetic
 cluster_option=ncut
-lmd=10
+lmd=50
 python test_fair_clustering.py -d $dataset \
                              --cluster_option $cluster_option \
                              --lmbda-tune $lmd_tune \
