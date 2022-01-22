@@ -124,11 +124,11 @@ def  main(args):
 
         if cluster_option == 'ncut':
 
-            C,l,elapsed,S,E = fair_clustering(X, K, u_V, V_list, lmbda, fairness, cluster_option, C_init = C_init, l_init =l_init,  A = A)
+            C,l,elapsed,S,E = fair_clustering(X, K, u_V, V_list, lmbda, args.L, fairness, cluster_option, C_init = C_init, l_init =l_init,  A = A,)
 
         else:
 
-            C,l,elapsed,S,E = fair_clustering(X, K, u_V, V_list, lmbda, fairness, cluster_option, C_init=C_init, l_init=l_init)
+            C,l,elapsed,S,E = fair_clustering(X, K, u_V, V_list, lmbda, args.L, fairness, cluster_option, C_init=C_init, l_init=l_init, args = args)
 
         min_balance, avg_balance = get_fair_accuracy(u_V,V_list,l,N,K)
         fairness_error = get_fair_accuracy_proportional(u_V,V_list,l,N,K)
@@ -216,6 +216,7 @@ if __name__ == '__main__':
     #Lambda
     parser.add_argument('--lmbda', type=float, default=50) # specified lambda
     parser.add_argument('--lmbda-tune', type=str2bool, default=True)  # run in a range of different lambdas
+    parser.add_argument('--L', type=float, default= 2.0)  # Lipchitz value in bound update
 
 
     # misc

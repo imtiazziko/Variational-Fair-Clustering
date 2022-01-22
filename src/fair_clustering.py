@@ -210,7 +210,7 @@ def restore_nonempty_cluster (X,K,oldl,oldC,oldS,ts):
         
         return l,C,S,trivial_status
 
-def fair_clustering(X, K, u_V, V_list, lmbda, fairness = False, method = 'kmeans', C_init = "kmeans_plus",
+def fair_clustering(X, K, u_V, V_list, lmbda, L, fairness = False, method = 'kmeans', C_init = "kmeans_plus",
                     l_init = None, A = None):
     
     """ 
@@ -295,9 +295,9 @@ def fair_clustering(X, K, u_V, V_list, lmbda, fairness = False, method = 'kmeans
                 if trivial_status:
                     break
                 
-            bound_iterations = 5000
+            bound_iterations = 10000
 
-            l,S,bound_E = bound_update(a_p, u_V, V_list, lmbda, bound_iterations)
+            l,S,bound_E = bound_update(a_p, u_V, V_list, lmbda, L, bound_iterations)
             fairness_error = get_fair_accuracy_proportional(u_V,V_list,l,N,K)
             print('fairness_error = {:0.4f}'.format(fairness_error))
 

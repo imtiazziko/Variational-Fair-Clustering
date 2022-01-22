@@ -55,7 +55,7 @@ def get_S_discrete(l,N,K):
     return temp
 
             
-def bound_update(a_p, u_V, V_list, bound_lambda, bound_iteration = 200, debug=False):
+def bound_update(a_p, u_V, V_list, bound_lambda, L, bound_iteration = 200, debug=False):
     
     """
     """
@@ -69,7 +69,6 @@ def bound_update(a_p, u_V, V_list, bound_lambda, bound_iteration = 200, debug=Fa
 # Initialize the S
     S = np.exp((-a_p))
     S = normalize_2(S)
-    L = 2.0
 
     for i in range(bound_iteration):
         printProgressBar(i + 1, bound_iteration,length=12)
