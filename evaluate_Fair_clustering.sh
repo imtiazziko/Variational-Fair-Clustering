@@ -43,7 +43,7 @@ python test_fair_clustering.py -d $dataset \
 
 #Synthetic
 #dataset=Synthetic
-#cluster_option=ncut
+#cluster_option=kmeans
 #lmd=60.0
 #python test_fair_clustering.py -d $dataset \
 #                             --cluster_option $cluster_option \

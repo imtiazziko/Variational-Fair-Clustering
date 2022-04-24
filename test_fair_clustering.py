@@ -128,7 +128,7 @@ def  main(args):
 
         else:
 
-            C,l,elapsed,S,E = fair_clustering(X, K, u_V, V_list, lmbda, args.L, fairness, cluster_option, C_init=C_init, l_init=l_init, args = args)
+            C,l,elapsed,S,E = fair_clustering(X, K, u_V, V_list, lmbda, args.L, fairness, cluster_option, C_init=C_init, l_init=l_init)
 
         min_balance, avg_balance = get_fair_accuracy(u_V,V_list,l,N,K)
         fairness_error = get_fair_accuracy_proportional(u_V,V_list,l,N,K)
