@@ -1,11 +1,12 @@
 import numpy as np
 import os
 from sklearn.datasets import make_blobs
+from sklearn.impute import KNNImputer
 import sys
 import requests, zipfile, io
 import pandas
 
-__datasets = ['Adult', 'Bank', 'Synthetic', 'Synthetic-unequal', 'CensusII']
+__datasets = ['Adult', 'Bank', 'Synthetic', 'Synthetic-unequal', 'CensusII', 'Credit', 'Heart', 'Credit-II', 'Diabetes']
 
 def dataset_names():
 
@@ -173,6 +174,192 @@ def read_dataset(name, data_dir):
         # data = scale(data, axis = 0)
         K = 20
 
+    elif name=='Credit':
+        _path = 'german-credit.csv'
+        data_path = os.path.join(data_dir, _path)
+
+        # Check if the file exists
+        if not os.path.exists(data_path):
+            print('Dataset does not exist, downloading...')
+
+            # Download dataset
+            url = 'https://archive.ics.uci.edu/static/public/144/statlog+german+credit+data.zip'
+            r = requests.get(url, allow_redirects=True)
+
+            if r.status_code == 200:
+                print('Download successful')
+            else:
+                print('Download failed. Please try manually.')
+                exit()
+
+            # Extract the data file
+            with zipfile.ZipFile(io.BytesIO(r.content)) as z:
+                with z.open('german.data') as f:
+                    raw_data = f.read().decode('utf-8')
+
+            # Save raw data locally
+            raw_path = os.path.join(data_dir, 'german.data')
+            with open(raw_path, 'w') as f:
+                f.write(raw_data)
+
+        # Column names based on dataset documentation
+        columns = [
+            "Status of existing checking account", "Duration in month", "Credit history", "Purpose", "Credit amount",
+            "Savings account/bonds", "Present employment since", "Installment rate in percentage of disposable income",
+            "Personal status and sex", "Other debtors / guarantors", "Present residence since", "Property",
+            "Age in years", "Other installment plans", "Housing", "Number of existing credits at this bank",
+            "Job", "Number of people being liable to provide maintenance for", "Telephone", "Foreign worker", "Target"
+        ]
+        # Read dataset correctly (space-separated values)
+        df = pandas.read_csv(raw_path, sep='\s+', header=None, names=columns)
+
+        # Save as CSV
+        df.to_csv(data_path, index=False)
+        print(f"CSV file saved at: {data_path}")
+
+        # Extract sensitive attribute (sex) from "Personal status and sex"
+        sex = df['Personal status and sex'].astype(str).values
+
+        # Define sensitive attributes based on unique values
+        sens_attributes = list(set(sex))
+
+        # df = df.drop(columns='iSex')
+        # data = np.array(df, dtype=float)
+        print(df.columns)  # Print columns to verify structure
+        print("Before filtering: df.shape =", df.shape)
+        print("Unique values before filtering:", df['Personal status and sex'].unique())
+
+        df = df[df['Personal status and sex'].isin(sens_attributes)]
+
+        print("After filtering: df.shape =", df.shape)
+        print("Unique values after filtering:", df['Personal status and sex'].unique())
+
+        sex = df['Personal status and sex'].astype(str).values
+        print("Length of sex:", len(sex))
+
+        # Extract relevant numerical attributes
+        df_values = df[['Age in years', 'Duration in month', 'Credit amount', 
+                        'Installment rate in percentage of disposable income', 
+                        'Number of existing credits at this bank']].values
+        
+        sex_num = np.zeros(df.shape[0], dtype=int)
+        for i, attr in enumerate(sens_attributes):
+            print(f"Encoding '{attr}' as {i}")
+            sex_num[np.where(sex == attr)] = i
+
+        print("Final sex_num:", sex_num)
+
+        data = np.array(df_values, dtype=float)
+        print('----------------------------------------------------')
+        print(data)
+        print(sex_num)
+
+        # data = scale(data, axis = 0)
+        K = 2
+
+    elif name=='Heart':
+        _path = 'heart-disease.csv'
+        data_path = os.path.join(data_dir, _path)
+
+        # Check if the file exists
+        if not os.path.exists(data_path):
+            print('Dataset does not exist, downloading...')
+
+            # Download dataset
+            url = 'https://archive.ics.uci.edu/static/public/45/heart+disease.zip'
+            r = requests.get(url, allow_redirects=True)
+
+            if r.status_code == 200:
+                print('Download successful')
+            else:
+                print('Download failed. Please try manually.')
+                exit()
+
+            # Extract the data file
+            with zipfile.ZipFile(io.BytesIO(r.content)) as z:
+                with z.open('processed.cleveland.data') as f:
+                    raw_data = f.read().decode('utf-8')
+
+            # Save raw data locally
+            raw_path = os.path.join(data_dir, 'processed.cleveland.data')
+            with open(raw_path, 'w') as f:
+                f.write(raw_data)
+
+        # Read dataset correctly (space-separated values)
+        df = pandas.read_csv(raw_path, sep=',', header=None)
+
+        # Save as CSV
+        df.to_csv(data_path, index=False)
+        print(f"CSV file saved at: {data_path}")
+
+        df = df.replace('?', np.nan).astype(float)
+        
+        # Replace '?' with NaN and then convert to float
+        imputer = KNNImputer(n_neighbors=5) # You can adjust the number of neighbors
+        df_imputed = pandas.DataFrame(imputer.fit_transform(df))
+
+        # Encode sex as numerical values
+        sex_num = df_imputed[0].copy()
+        # Now convert to NumPy array with float dtype
+        data = np.array(df_imputed, dtype=float)
+        K = 1
+
+    elif name=='Credit-II':
+        _path = "default_of_credit_card_clients.csv"
+        xls_path = os.path.join(data_dir, "default of credit card clients.xls")
+        csv_path = os.path.join(data_dir, _path)
+
+        # Download dataset if not present
+        if not os.path.exists(xls_path):
+            print("Dataset does not exist, downloading...")
+
+            # Download dataset
+            url = "https://archive.ics.uci.edu/static/public/350/default+of+credit+card+clients.zip"
+            r = requests.get(url, allow_redirects=True)
+
+            if r.status_code == 200:
+                print("Download successful")
+                
+                # Extract the .xls file from the ZIP
+                with zipfile.ZipFile(io.BytesIO(r.content)) as z:
+                    z.extractall(data_dir)
+                
+                print("Extraction complete.")
+            else:
+                print("Download failed. Please try manually.")
+                exit()
+
+        # Load the .xls file
+        df = pandas.read_excel(xls_path, header=1)  # Skip the first row (column names are in the second row)
+
+        # Save as CSV for future use
+        df.to_csv(csv_path, index=False)
+        print(f"CSV file saved at: {csv_path}")
+
+        df = df.replace('?', np.nan).astype(float)
+        # Encode sex as numerical values
+        sex_num = df['SEX'].copy().to_numpy(dtype=float)
+        # Replace '?' with NaN and then convert to float
+
+        # Convert to NumPy array
+        data = df.to_numpy(dtype=float)
+        print("Dataset loaded successfully as NumPy array!") 
+        K = 20
+
+    elif name=='Diabetes':
+        # Define file paths
+        _path = "diabetes.csv"
+        csv_path = os.path.join(data_dir, _path)
+
+        # Download dataset if not present
+        if not os.path.exists(csv_path):
+            print("Dataset does not exist, PLease download yourself")
+            return
+        # Load the .xls file
+        df = pandas.read_csv(csv_path, sep=',')
+        sex_num = df['Sex'].copy().to_numpy(dtype=float)
+        data = df.to_numpy(dtype=float)
+        K = 20
     else:
         pass
 

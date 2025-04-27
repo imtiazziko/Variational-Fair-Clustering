@@ -9,7 +9,8 @@ from sklearn.neighbors import NearestNeighbors
 from scipy import sparse
 import scipy.sparse as sps
 import timeit
-from pyflann import FLANN
+# from pyflann import FLANN
+import faiss
 import multiprocessing
 
 SHARED_VARS = {}
@@ -122,47 +123,44 @@ def get_fair_accuracy_proportional(u_V,V_list,l,N,K):
     return fairness_error.sum()
 
 
-def create_affinity(X, knn, scale = None, alg = "annoy", savepath = None, W_path = None):
-    N,D = X.shape
+def create_affinity(X, knn, scale=None, alg="faiss", savepath=None, W_path=None):
+    N, D = X.shape
     if W_path is not None:
         if W_path.endswith('.mat'):
             W = sio.loadmat(W_path)['W']
         elif W_path.endswith('.npz'):
             W = sparse.load_npz(W_path)
     else:
-        
         print('Compute Affinity ')
         start_time = timeit.default_timer()
-        if alg == "flann":
-            print('with Flann')
-            flann = FLANN()
-            knnind,dist = flann.nn(X,X,knn, algorithm = "kdtree",target_precision = 0.9,cores = 5);
-            # knnind = knnind[:,1:]
+
+        if alg == "faiss":
+            print('Using Faiss')
+            index = faiss.IndexFlatL2(D)  # L2-distance index
+            index.add(X.astype(np.float32))  
+            dist, knnind = index.search(X.astype(np.float32), knn)
         else:
-            nbrs = NearestNeighbors(n_neighbors=knn).fit(X)
+            nbrs = NearestNeighbors(n_neighbors=knn, algorithm='auto').fit(X)
             dist, knnind = nbrs.kneighbors(X)
 
-        row = np.repeat(range(N),knn-1)
-        col = knnind[:,1:].flatten()
+        row = np.repeat(np.arange(N), knn - 1)
+        col = knnind[:, 1:].flatten()
         if scale is None:
-            data = np.ones(X.shape[0]*(knn-1))
-        elif scale is True:
-            scale = np.median(dist[:,1:])
-            data = np.exp((-dist[:,1:]**2)/(2 * scale ** 2)).flatten() 
+            data = np.ones(N * (knn - 1))
         else:
-            data = np.exp((-dist[:,1:]**2)/(2 * scale ** 2)).flatten()
+            scale = np.median(dist[:, 1:]) if scale is True else scale
+            data = np.exp((-dist[:, 1:]**2) / (2 * scale**2)).flatten()
 
-        W = sparse.csc_matrix((data, (row, col)), shape=(N,N),dtype=np.float)
-        W = (W + W.transpose(copy=True)) /2
+        W = sparse.csc_matrix((data, (row, col)), shape=(N, N), dtype=np.float64)
+        W = (W + W.transpose(copy=True)) / 2
         elapsed = timeit.default_timer() - start_time
-        print(elapsed)         
+        print(f'Elapsed time: {elapsed:.2f}s')
 
-        if isinstance(savepath,str):
+        if isinstance(savepath, str):
             if savepath.endswith('.npz'):
-                sparse.save_npz(savepath,W)
+                sparse.save_npz(savepath, W)
             elif savepath.endswith('.mat'):
-                sio.savemat(savepath,{'W':W})
-            
+                sio.savemat(savepath, {'W': W})
     return W
 
 

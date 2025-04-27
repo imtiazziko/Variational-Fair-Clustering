@@ -4,7 +4,7 @@ import sys
 import os.path as osp
 import numpy as np
 from sklearn.preprocessing import scale
-from src.fair_clustering import fair_clustering, km_init
+from src.fair_clustering import *
 import src.utils as utils
 from src.dataset_load import read_dataset,dataset_names
 from src.utils  import get_fair_accuracy, get_fair_accuracy_proportional, normalizefea, Logger, str2bool
