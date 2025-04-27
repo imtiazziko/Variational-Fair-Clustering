@@ -3,7 +3,7 @@
 import numpy as np
 import timeit
 from src.progressBar import printProgressBar
-from numba import  jit
+from numba import  jit, prange
 import numexpr as ne
 
 def normalize(S_in):
@@ -29,29 +29,33 @@ def bound_energy(S, S_in, a_term, b_term, L, bound_lambda, batch = False):
 
     return E
 
-@jit(parallel=True)
-def compute_b_j_parallel(J,S,V_list,u_V):
-    result = [compute_b_j(V_list[j],u_V[j],S) for j in range(J)]
-    return result
-
-
-def compute_b_j(V_j,u_j,S_):
-    N,K = S_.shape
-    V_j = V_j.astype('float')
+@jit(nopython=True)
+def compute_b_j(V_j, u_j, S_):
+    N, K = S_.shape
+    V_j = V_j.astype(np.float64)  # Ensure correct dtype
     S_sum = S_.sum(0)
-    R_j = ne.evaluate('u_j*(1/S_sum)')
-    F_j_a = np.tile((ne.evaluate('u_j*V_j')),[K,1]).T
-    F_j_b = np.maximum(np.tile(np.dot(V_j,S_),[N,1]),1e-15)
-    F_j = ne.evaluate('R_j - (F_j_a/F_j_b)')
-
+    R_j = u_j / S_sum
+    
+    # Replace np.tile with explicit broadcasting
+    F_j_a = (u_j * V_j)[:, None]  # Reshape to (N, 1) instead of tiling
+    
+    # Use np.dot without tiling
+    F_j_b = np.maximum(np.dot(V_j, S_), 1e-15)
+    
+    F_j = R_j - (F_j_a / F_j_b)
     return F_j
 
+@jit(nopython=True, parallel=False)  # Disable parallel
+def compute_b_j_parallel(J, S, V_list, u_V):
+    result = [compute_b_j(V_list[j], u_V[j], S) for j in range(J)]  # Use range instead of prange
+    return result
 
-@jit
-def get_S_discrete(l,N,K):
-    x = range(N)
-    temp =  np.zeros((N,K),dtype=float)
-    temp[(x,l)]=1
+@jit(nopython=True)  # Keep nopython mode
+def get_S_discrete(l, N, K):
+    l = np.asarray(l, dtype=np.int32)  # Ensure it's a NumPy array
+    temp = np.zeros((N, K), dtype=np.float64)  # Initialize a 2D matrix
+    for i in range(N):  # Use a loop to assign values
+        temp[i, l[i]] = 1
     return temp
 
             

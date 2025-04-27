@@ -4,13 +4,12 @@ import math
 from sklearn.metrics.pairwise import euclidean_distances as ecdist
 from sklearn.metrics import pairwise_distances_chunked as pdist_chunk
 from sklearn.cluster import KMeans
-from sklearn.cluster.k_means_ import _init_centroids
 from src.bound_update import bound_update, normalize_2, get_S_discrete
 from src.utils  import get_fair_accuracy, get_fair_accuracy_proportional
 import timeit
 import src.utils as utils
 import multiprocessing
-from numba import  jit
+from numba import  jit, njit
 import numexpr as ne
 # import pdb
 def kmeans_update(tmp):
@@ -51,8 +50,8 @@ def NormalizedCutEnergy(A, S, clustering):
         d = A.sum(axis=1)
 
     maxclusterid = np.max(clustering)
-    nassoc_e = 0;
-    num_cluster = 0;
+    nassoc_e = 0
+    num_cluster = 0
     for k in range(maxclusterid+1):
         S_k = S[:,k]
         #print S_k
@@ -80,7 +79,8 @@ def NormalizedCutEnergy_discrete(A, clustering):
     nassoc_e = 0;
     num_cluster = 0;
     for k in range(maxclusterid+1):
-        S_k = np.array(clustering == k,dtype=np.float)
+        S_k = np.array(clustering == k, dtype=np.float64)  # Change np.float to np.float64
+
         #print S_k
         if 0 == np.sum(clustering==k):
              continue # skip empty cluster
@@ -105,16 +105,29 @@ def KernelBound_k(A, d, S_k, N):
 
     return temp2.flatten()
 
-@jit
-def km_le(X,M):
-    
+@njit
+def km_le(X, M):
     """
-    Discretize the assignments based on center
+    Discretize the assignments based on center.
     
+    Args:
+        X (ndarray): Data points of shape (N, D).
+        M (ndarray): Cluster centers of shape (K, D).
+    
+    Returns:
+        ndarray: Cluster assignments for each data point.
     """
-    e_dist = ecdist(X,M)          
-    l = e_dist.argmin(axis=1)
-        
+    # Compute Euclidean distance without relying on external functions
+    e_dist = np.empty((X.shape[0], M.shape[0]))  # Preallocate distance matrix
+    
+    for i in range(X.shape[0]):
+        for j in range(M.shape[0]):
+            diff = X[i] - M[j]
+            e_dist[i, j] = np.sqrt(np.sum(diff ** 2))  # Euclidean distance
+    
+    # Assign each point to the closest center
+    l = np.argmin(e_dist, axis=1)
+    
     return l
 
 # Fairness term calculation
@@ -166,29 +179,25 @@ def compute_energy_fair_clustering(X, C, l, S, u_V, V_list, bound_lambda, A = No
 
     return E, clustering_E, fairness_E, clustering_E_discrete
     
-def km_init(X, K, C_init, l_init= None):
-    
+def km_init(X, K, C_init, l_init=None):
     """
-    Initial seeds
+    Initial seeds using updated scikit-learn methods.
     """
-    if isinstance(C_init,str):
-
+    if isinstance(C_init, str):
         if C_init == 'kmeans_plus':
-            M =_init_centroids(X,K,init='k-means++')
-            l = km_le(X,M)
-            
-        elif C_init =='kmeans':
-            kmeans = KMeans(n_clusters=K).fit(X)
-            l =kmeans.labels_
+            kmeans = KMeans(n_clusters=K, init='k-means++', n_init='auto', random_state=42).fit(X)
             M = kmeans.cluster_centers_
+            l = kmeans.labels_
+            
+        elif C_init == 'kmeans':
+            kmeans = KMeans(n_clusters=K, init='random', n_init='auto', random_state=42).fit(X)
+            M = kmeans.cluster_centers_
+            l = kmeans.labels_
     else:
-        M = C_init.copy()
-        # l = km_le(X,M)
-        l = l_init.copy()
+        M = np.copy(C_init)
+        l = np.copy(l_init) if l_init is not None else None
 
-    del C_init, l_init
-
-    return M,l
+    return M, l
 
 def restore_nonempty_cluster (X,K,oldl,oldC,oldS,ts):
         ts_limit = 2
