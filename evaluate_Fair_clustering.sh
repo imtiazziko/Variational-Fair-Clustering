@@ -13,7 +13,7 @@ python test_fair_clustering.py -d $dataset \
                              --cluster_option $cluster_option \
                              --lmbda-tune $lmd_tune \
                              --lmbda $lmd \
-                             --L 1.0
+                             --L 1.0 \
                              --plot_option_clusters_vs_lambda $c_v_l \
                              --plot_option_fairness_vs_clusterE $f_v_E \
                              --plot_option_convergence $conv
@@ -22,6 +22,57 @@ python test_fair_clustering.py -d $dataset \
 #cluster_option=ncut
 #lmd=40
 #python test_fair_clustering.py -d $dataset \
+#                             --cluster_option $cluster_option \
+#                             --lmbda-tune $lmd_tune \
+#                             --lmbda $lmd \
+#                             --L 1.0 \
+#                             --plot_option_clusters_vs_lambda $c_v_l \
+#                             --plot_option_fairness_vs_clusterE $f_v_E \
+#                             --plot_option_convergence $conv
+
+# dataset=Credit
+# cluster_option=ncut
+# lmd=40
+# python test_fair_clustering.py -d $dataset \
+#                             --cluster_option $cluster_option \
+#                             --lmbda-tune $lmd_tune \
+#                             --lmbda $lmd \
+#                             --L 1.0 \
+#                             --plot_option_clusters_vs_lambda $c_v_l \
+#                             --plot_option_fairness_vs_clusterE $f_v_E \
+#                             --plot_option_convergence $conv
+
+
+# dataset=Credit-II
+# cluster_option=ncut
+# lmd=40
+# python test_fair_clustering.py -d $dataset \
+#                             --cluster_option $cluster_option \
+#                             --lmbda-tune $lmd_tune \
+#                             --lmbda $lmd \
+#                             --L 1.0 \
+#                             --plot_option_clusters_vs_lambda $c_v_l \
+#                             --plot_option_fairness_vs_clusterE $f_v_E \
+#                             --plot_option_convergence $conv
+
+
+
+# dataset=Diabetes
+# cluster_option=ncut
+# lmd=40
+# python test_fair_clustering.py -d $dataset \
+#                             --cluster_option $cluster_option \
+#                             --lmbda-tune $lmd_tune \
+#                             --lmbda $lmd \
+#                             --L 1.0 \
+#                             --plot_option_clusters_vs_lambda $c_v_l \
+#                             --plot_option_fairness_vs_clusterE $f_v_E \
+#                             --plot_option_convergence $conv
+
+# dataset=Heart
+# cluster_option=kmeans
+# lmd=40
+# python test_fair_clustering.py -d $dataset \
 #                             --cluster_option $cluster_option \
 #                             --lmbda-tune $lmd_tune \
 #                             --lmbda $lmd \
@@ -52,6 +103,18 @@ python test_fair_clustering.py -d $dataset \
 #                             --plot_option_clusters_vs_lambda $c_v_l \
 #                             --plot_option_fairness_vs_clusterE $f_v_E \
 #                             --plot_option_convergence $conv
+
+# cluster_option=ncut
+# lmd=10
+# python test_fair_clustering.py -d $dataset \
+#                              --cluster_option $cluster_option \
+#                              --lmbda-tune $lmd_tune \
+#                              --lmbda $lmd \
+#                              --L 1.0 \
+#                              --plot_option_clusters_vs_lambda $c_v_l \
+#                              --plot_option_fairness_vs_clusterE $f_v_E \
+#   
+
 ##Census II
 #dataset=CensusII
 #cluster_option=kmeans
